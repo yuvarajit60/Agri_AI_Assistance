@@ -37,7 +37,9 @@ async def _get(client: httpx.AsyncClient, url: str, params: dict[str, Any]) -> d
         resp = await client.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
         resp.raise_for_status()
         return resp.json()
-    except httpx.HTTPError:
+    except (httpx.HTTPError, ValueError):
+        # ValueError covers resp.json() failing to parse — a free-tier host
+        # waking from a cold start can hand back a non-JSON interim page.
         return None
 
 
@@ -46,7 +48,7 @@ async def _post(client: httpx.AsyncClient, url: str, json: dict[str, Any]) -> di
         resp = await client.post(url, json=json, timeout=REQUEST_TIMEOUT_SECONDS)
         resp.raise_for_status()
         return resp.json()
-    except httpx.HTTPError:
+    except (httpx.HTTPError, ValueError):
         return None
 
 
@@ -140,14 +142,16 @@ async def _proxy(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.request(method, f"{base_url}{path}", json=json, timeout=REQUEST_TIMEOUT_SECONDS)
-    except httpx.HTTPError as exc:
+        if resp.status_code == 204 or not resp.content:
+            return Response(status_code=resp.status_code)
+        return JSONResponse(content=resp.json(), status_code=resp.status_code)
+    except (httpx.HTTPError, ValueError) as exc:
+        # ValueError covers resp.json() failing to parse — a free-tier host
+        # waking from a cold start can hand back a non-JSON interim page.
         return JSONResponse(
             status_code=503,
             content={"detail": f"Upstream service unavailable: {exc}"},
         )
-    if resp.status_code == 204 or not resp.content:
-        return Response(status_code=resp.status_code)
-    return JSONResponse(content=resp.json(), status_code=resp.status_code)
 
 
 @app.post("/users")

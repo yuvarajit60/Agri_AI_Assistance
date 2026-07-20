@@ -16,4 +16,8 @@ GIS_SERVICE_URL = _service_url("GIS_SERVICE_URL", 8004)
 FARM_REGISTRY_URL = _service_url("FARM_REGISTRY_URL", 8005)
 DISEASE_KB_SERVICE_URL = _service_url("DISEASE_KB_SERVICE_URL", 8006)
 
-REQUEST_TIMEOUT_SECONDS = float(os.environ.get("UPSTREAM_TIMEOUT_SECONDS", "10"))
+# Free-tier Render services spin down after ~15 min idle and take 12-22s
+# to wake on the next request (observed directly) — a 10s upstream timeout
+# gives up before a cold start finishes, degrading a dashboard that would
+# have succeeded a few seconds later.
+REQUEST_TIMEOUT_SECONDS = float(os.environ.get("UPSTREAM_TIMEOUT_SECONDS", "30"))
