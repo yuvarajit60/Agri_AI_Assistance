@@ -4,4 +4,3 @@ pydantic>=2.6
 python-multipart>=0.0.9
 sentence-transformers>=3.0
 qdrant-client>=1.10
--e ../../shared

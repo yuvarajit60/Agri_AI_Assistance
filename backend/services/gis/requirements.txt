@@ -3,4 +3,3 @@ uvicorn[standard]>=0.30
 pydantic>=2.6
 shapely>=2.0
 pyproj>=3.6
--e ../../shared
