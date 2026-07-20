@@ -32,21 +32,45 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+_RETRY_ATTEMPTS = 2
+_RETRY_DELAY_SECONDS = 3
+
+
+async def _request(client: httpx.AsyncClient, method: str, url: str, **kwargs: Any) -> httpx.Response:
+    """A free-tier Render service waking from a cold start (~15 min idle
+    triggers spin-down) can hand back a connection error or an empty,
+    unparseable body on the very first request that wakes it — the origin
+    container hasn't actually finished booting yet even though something
+    already answered. A short, single retry turns that into "a bit
+    slower" instead of "the app is down," which is what farmers would
+    otherwise experience for a backend that's actually fine a few seconds
+    later."""
+    last_exc: Exception = RuntimeError("unreachable")
+    for attempt in range(_RETRY_ATTEMPTS):
+        try:
+            resp = await client.request(method, url, timeout=REQUEST_TIMEOUT_SECONDS, **kwargs)
+            resp.raise_for_status()
+            if resp.status_code != 204 and resp.content:
+                resp.json()  # validate the body actually parses before trusting this response
+            return resp
+        except (httpx.HTTPError, ValueError) as exc:
+            last_exc = exc
+            if attempt < _RETRY_ATTEMPTS - 1:
+                await asyncio.sleep(_RETRY_DELAY_SECONDS)
+    raise last_exc
+
+
 async def _get(client: httpx.AsyncClient, url: str, params: dict[str, Any]) -> dict[str, Any] | None:
     try:
-        resp = await client.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
-        resp.raise_for_status()
+        resp = await _request(client, "GET", url, params=params)
         return resp.json()
     except (httpx.HTTPError, ValueError):
-        # ValueError covers resp.json() failing to parse — a free-tier host
-        # waking from a cold start can hand back a non-JSON interim page.
         return None
 
 
 async def _post(client: httpx.AsyncClient, url: str, json: dict[str, Any]) -> dict[str, Any] | None:
     try:
-        resp = await client.post(url, json=json, timeout=REQUEST_TIMEOUT_SECONDS)
-        resp.raise_for_status()
+        resp = await _request(client, "POST", url, json=json)
         return resp.json()
     except (httpx.HTTPError, ValueError):
         return None
@@ -141,13 +165,11 @@ async def _proxy(
 ) -> Response:
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.request(method, f"{base_url}{path}", json=json, timeout=REQUEST_TIMEOUT_SECONDS)
+            resp = await _request(client, method, f"{base_url}{path}", json=json)
         if resp.status_code == 204 or not resp.content:
             return Response(status_code=resp.status_code)
         return JSONResponse(content=resp.json(), status_code=resp.status_code)
     except (httpx.HTTPError, ValueError) as exc:
-        # ValueError covers resp.json() failing to parse — a free-tier host
-        # waking from a cold start can hand back a non-JSON interim page.
         return JSONResponse(
             status_code=503,
             content={"detail": f"Upstream service unavailable: {exc}"},

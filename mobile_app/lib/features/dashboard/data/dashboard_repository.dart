@@ -50,7 +50,7 @@ class DashboardFetchException implements Exception {
   factory DashboardFetchException.fromDioException(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.connectionError) {
       return DashboardFetchException(
-        'Could not reach the backend. Make sure your phone is on the same WiFi as the server.',
+        'Could not reach the backend. It may still be waking up from idle — please try again in a moment.',
       );
     }
     return DashboardFetchException('Failed to load farm data: ${e.message}');
