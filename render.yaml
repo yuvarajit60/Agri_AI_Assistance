@@ -1,0 +1,94 @@
+# Render Blueprint — deploys the 6 lightweight backend services (everything
+# except disease_kb, which needs ~3-4GB RAM for its BGE-M3 model and doesn't
+# fit a free-tier plan; see docs/architecture/ROADMAP.md). All services sit
+# in the same region so they can reach each other over Render's private
+# network without an extra hop through the public internet.
+#
+# One manual step after the blueprint deploys: agri-farm-registry's
+# DATABASE_URL is intentionally left unset here (sync: false) — paste your
+# Neon/Supabase connection string into it from the Render dashboard. Secrets
+# never belong in a committed render.yaml.
+
+services:
+  - type: web
+    name: agri-crop-recommendation
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/crop_recommendation/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+
+  - type: web
+    name: agri-weather
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/weather/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+
+  - type: web
+    name: agri-soil
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/soil/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+
+  - type: web
+    name: agri-gis
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/gis/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+
+  - type: web
+    name: agri-farm-registry
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/farm_registry/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # set manually in the Render dashboard — a Neon/Supabase connection string
+
+  - type: web
+    name: agri-gateway
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/gateway/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: SOIL_SERVICE_URL
+        fromService:
+          name: agri-soil
+          type: web
+          property: hostport
+      - key: WEATHER_SERVICE_URL
+        fromService:
+          name: agri-weather
+          type: web
+          property: hostport
+      - key: CROP_SERVICE_URL
+        fromService:
+          name: agri-crop-recommendation
+          type: web
+          property: hostport
+      - key: GIS_SERVICE_URL
+        fromService:
+          name: agri-gis
+          type: web
+          property: hostport
+      - key: FARM_REGISTRY_URL
+        fromService:
+          name: agri-farm-registry
+          type: web
+          property: hostport
