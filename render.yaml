@@ -1,13 +1,16 @@
 # Render Blueprint — deploys the 6 lightweight backend services (everything
 # except disease_kb, which needs ~3-4GB RAM for its BGE-M3 model and doesn't
-# fit a free-tier plan; see docs/architecture/ROADMAP.md). All services sit
-# in the same region so they can reach each other over Render's private
-# network without an extra hop through the public internet.
+# fit a free-tier plan; see docs/architecture/ROADMAP.md).
 #
-# One manual step after the blueprint deploys: agri-farm-registry's
-# DATABASE_URL is intentionally left unset here (sync: false) — paste your
-# Neon/Supabase connection string into it from the Render dashboard. Secrets
-# never belong in a committed render.yaml.
+# Free-tier web services cannot RECEIVE private-network traffic (Render
+# restriction — private networking to a free service only works outbound,
+# e.g. to a database), so agri-gateway can't reach the other 5 services via
+# fromService/hostport the way a paid plan could. It calls their PUBLIC
+# .onrender.com URLs instead — those URLs get a random suffix assigned at
+# creation, so they can't be known ahead of time and are left unset here
+# (sync: false) for manual entry once every service shows a URL in the
+# Render dashboard. Same reasoning for agri-farm-registry's DATABASE_URL:
+# secrets/unpredictable values never belong in a committed render.yaml.
 
 services:
   - type: web
@@ -68,27 +71,12 @@ services:
     healthCheckPath: /health
     envVars:
       - key: SOIL_SERVICE_URL
-        fromService:
-          name: agri-soil
-          type: web
-          property: hostport
+        sync: false # set manually — agri-soil's public https://....onrender.com URL
       - key: WEATHER_SERVICE_URL
-        fromService:
-          name: agri-weather
-          type: web
-          property: hostport
+        sync: false # set manually — agri-weather's public https://....onrender.com URL
       - key: CROP_SERVICE_URL
-        fromService:
-          name: agri-crop-recommendation
-          type: web
-          property: hostport
+        sync: false # set manually — agri-crop-recommendation's public https://....onrender.com URL
       - key: GIS_SERVICE_URL
-        fromService:
-          name: agri-gis
-          type: web
-          property: hostport
+        sync: false # set manually — agri-gis's public https://....onrender.com URL
       - key: FARM_REGISTRY_URL
-        fromService:
-          name: agri-farm-registry
-          type: web
-          property: hostport
+        sync: false # set manually — agri-farm-registry's public https://....onrender.com URL
