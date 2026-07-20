@@ -1,0 +1,97 @@
+version: "3.9"
+
+services:
+  postgres:
+    # Plain Postgres — no PostGIS extension needed while boundary is stored
+    # as JSON (see farm_registry/app/models.py); switch to postgis/postgis
+    # if/when a real Geometry column is introduced.
+    image: postgres:16
+    environment:
+      POSTGRES_USER: agri
+      POSTGRES_PASSWORD: agri
+      POSTGRES_DB: agri_farm_registry
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agri"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  farm_registry:
+    build:
+      context: .
+      dockerfile: services/farm_registry/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://agri:agri@postgres:5432/agri_farm_registry
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8005:8000"
+
+  gis:
+    build:
+      context: .
+      dockerfile: services/gis/Dockerfile
+    ports:
+      - "8004:8000"
+
+  weather:
+    build:
+      context: .
+      dockerfile: services/weather/Dockerfile
+    ports:
+      - "8002:8000"
+
+  soil:
+    build:
+      context: .
+      dockerfile: services/soil/Dockerfile
+    ports:
+      - "8003:8000"
+
+  crop_recommendation:
+    build:
+      context: .
+      dockerfile: services/crop_recommendation/Dockerfile
+    ports:
+      - "8001:8000"
+
+  disease_kb:
+    build:
+      context: .
+      dockerfile: services/disease_kb/Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - disease_kb_index:/app/services/disease_kb/app/qdrant_storage
+    ports:
+      - "8006:8000"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    environment:
+      SOIL_SERVICE_URL: http://soil:8000
+      WEATHER_SERVICE_URL: http://weather:8000
+      CROP_SERVICE_URL: http://crop_recommendation:8000
+      GIS_SERVICE_URL: http://gis:8000
+      FARM_REGISTRY_URL: http://farm_registry:8000
+      DISEASE_KB_SERVICE_URL: http://disease_kb:8000
+    depends_on:
+      - soil
+      - weather
+      - crop_recommendation
+      - gis
+      - farm_registry
+      - disease_kb
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
+  disease_kb_index:

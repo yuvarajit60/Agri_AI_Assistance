@@ -1,0 +1,35 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# disease_kb's local vector index — rebuilt from organic_diseases.json at
+# every service startup, so it's disposable, not source.
+backend/services/disease_kb/app/qdrant_storage/
+
+# Backend dev process logs (created when running services locally)
+backend/.*.log
+
+# Secrets — never commit real .env files, only .env.example
+.env
+*.env.local
+
+# Flutter / Dart
+mobile_app/build/
+mobile_app/.dart_tool/
+mobile_app/.flutter-plugins
+mobile_app/.flutter-plugins-dependencies
+mobile_app/android/.gradle/
+mobile_app/android/local.properties
+mobile_app/ios/Pods/
+mobile_app/ios/.symlinks/
+mobile_app/*.iml
+mobile_app/.idea/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
