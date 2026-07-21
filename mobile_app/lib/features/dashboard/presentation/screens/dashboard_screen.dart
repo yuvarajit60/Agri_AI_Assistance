@@ -75,6 +75,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _WeatherCard(section: dashboardState.value!.weather!, s: s),
                         const SizedBox(height: 14),
                       ],
+                      if (dashboardState.value!.waterResources != null) ...[
+                        _WaterResourceCard(section: dashboardState.value!.waterResources!, s: s),
+                        const SizedBox(height: 14),
+                      ],
                       if (dashboardState.value!.cropRecommendation != null) ...[
                         _CropRecommendationsLive(section: dashboardState.value!.cropRecommendation!, s: s),
                         const SizedBox(height: 14),
@@ -457,6 +461,46 @@ class _WeatherCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WaterResourceCard extends StatelessWidget {
+  const _WaterResourceCard({required this.section, required this.s});
+  final WaterResourceSection section;
+  final AppStrings s;
+
+  @override
+  Widget build(BuildContext context) {
+    final nearest = section.features.isEmpty
+        ? null
+        : section.features.reduce((a, b) => a.distanceKm < b.distanceKm ? a : b);
+    return DashboardSectionCard(
+      title: s.waterResourcesTitle,
+      icon: Icons.water_drop_outlined,
+      trailing: ConfidenceBadge(score: section.confidence, compact: true),
+      onTap: () => context.push('/water', extra: section),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (nearest != null)
+            Text(
+              '${s.waterFeatureType(nearest.type)} · ${s.distanceAway(nearest.distanceKm.toStringAsFixed(1))}',
+              style: Theme.of(context).textTheme.headlineMedium,
+            )
+          else
+            Text(s.noWaterFeaturesFound, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 6),
+          Text(
+            '${s.groundwaterStatus}: ${s.groundwaterCategory(section.groundwaterCategory)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Text(
+            '${s.irrigationFeasibilitySection}: ${s.irrigationMethod(section.irrigationMethod)}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );

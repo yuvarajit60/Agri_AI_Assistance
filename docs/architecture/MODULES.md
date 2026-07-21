@@ -33,6 +33,8 @@ For each nearby water feature type (river, canal, lake, pond, well, borewell, re
 - **Groundwater possibility** — CGWB district/block-level groundwater category (safe/semi-critical/critical/over-exploited) + depth-to-water-table estimate, translated into a plain-language "borewell feasibility" rating.
 - **Irrigation feasibility** — composite of nearest surface water distance + groundwater category + farm elevation relative to nearest source (gravity-fed vs. pumped).
 
+**Implementation note:** built — `backend/services/water` follows the same "always-estimated, honestly-labeled" pattern as the Soil service: `MockWaterResourceProvider` returns a deterministic per-location estimate (2-4 nearby features, a groundwater category, and a gravity-fed/pumped/limited irrigation suggestion), always at `confidence_score=0.5` with `data_sources` marked `live=false`. Real JRC/India-WRIS/OSM water-bodies ingestion and a CGWB groundwater feed aren't wired up yet — that's the natural next step once this pattern needs to graduate from estimate to measurement. Composed into the gateway `/dashboard` response and has its own mobile screen (Water Resources card → full detail screen).
+
 ## 4. Land Health Analysis
 
 Pipeline: check for a farmer-submitted/Soil-Health-Card lab report first → if none, estimate from SoilGrids + satellite spectral indices, explicitly flagged as estimated with a lab-test recommendation.

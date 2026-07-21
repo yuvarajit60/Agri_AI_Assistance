@@ -50,6 +50,15 @@ services:
     healthCheckPath: /health
 
   - type: web
+    name: agri-water
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/water/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+
+  - type: web
     name: agri-farm-registry
     runtime: docker
     plan: free
@@ -80,3 +89,5 @@ services:
         sync: false # set manually — agri-gis's public https://....onrender.com URL
       - key: FARM_REGISTRY_URL
         sync: false # set manually — agri-farm-registry's public https://....onrender.com URL
+      - key: WATER_SERVICE_URL
+        sync: false # set manually — agri-water's public https://....onrender.com URL

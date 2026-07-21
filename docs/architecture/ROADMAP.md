@@ -6,8 +6,8 @@ Goal: get a truthful, narrow slice in front of real farmers fast, then widen. Ev
 
 Development so far has been request-driven (built what was asked for, in the order it was asked), not a clean phase-by-phase march — so progress is scattered across phases rather than "Phase 0 done, Phase 1 in progress." Honest snapshot:
 
-- **Phase 0/1 — mostly done**: gateway, farm_registry (now real **PostgreSQL**, not just designed — see backend/README.md), GIS, weather (mock provider), soil (estimated + farmer-submitted lab report), crop recommendation engine, Flutter app with GPS + location-search + drawn-boundary-*less* land identification (boundary drawing itself is still not built), full dashboard.
-- **Phase 2 — partial**: Smart Comparison view is done; full crop economics (investment/profit/ROI) is done; Water Resource Service, Fertilizer Recommendation, Irrigation Planning are **not built**; Soil Health Card API integration is not built (farmers can manually enter lab values instead, which covers the same need less automatically).
+- **Phase 0/1 — mostly done**: gateway, farm_registry (now real **PostgreSQL**, not just designed — see backend/README.md), GIS, weather (mock provider), soil (estimated + farmer-submitted lab report), crop recommendation engine, Flutter app with GPS + location-search + drawn-boundary-*less* land identification (boundary drawing itself is still not built), full dashboard. **6 of these 7 services are now deployed to the cloud (Render free tier + Neon Postgres)** — see "Deployment reality" below.
+- **Phase 2 — partial**: Smart Comparison view is done; full crop economics (investment/profit/ROI) is done; **Water Resource Service is now built** (`backend/services/water` — surface-water proximity, groundwater category, irrigation method feasibility; same mock-provider-with-honest-confidence pattern as soil, real JRC/India-WRIS/OSM/CGWB ingestion not wired up yet); Fertilizer Recommendation and Irrigation Planning are **not built**; Soil Health Card API integration is not built (farmers can manually enter lab values instead, which covers the same need less automatically).
 - **Phase 3 — partial, out of order**: Disease guidance exists (`disease_kb` — RAG over a curated organic-treatment knowledge base), built ahead of schedule because it was requested directly. Pest Prediction, Natural Disaster Prediction, Satellite Monitoring, and Alerts are **not built**.
 - **Phase 4 — partial, out of order**: the vector DB + knowledge base ingestion piece exists (BGE-M3 + Qdrant, but scoped to organic disease guidance only, not a general AI Advisor). Multi-language support in the app is **done** (English/Tamil, live-switchable) — well ahead of schedule. AI Chat is still canned replies, not RAG/LLM-backed; AI Advisor doesn't exist.
 - **Phase 5/6 — not started.**
@@ -69,12 +69,18 @@ Development so far has been request-driven (built what was asked for, in the ord
 - LLM fine-tuning (RAG is sufficient through at least Phase 5)
 - Chemical/pesticide-specific treatment recommendations — deliberately not built even as a stub; see `backend/services/disease_kb/app/main.py`'s `chemical_guidance` endpoint for why (real safety/legal risk in guessing a product without a verified government-approved-pesticide dataset).
 
+## Deployment reality (as of the Render migration)
+
+- **6 services are live on Render's free tier**: gateway, crop_recommendation, weather, soil, gis, water, plus farm_registry backed by a free Neon Postgres. Free-tier web services spin down after ~15 min idle and take up to ~60s to wake — the gateway retries once on a failed/empty upstream response to smooth over the common case, but an occasional slow or degraded dashboard on the very first request after a break is expected, not a bug.
+- **`disease_kb` is NOT deployed to Render** — its BGE-M3 embedding model needs ~3-4GB RAM, well past free-tier limits. It runs locally and is reached through a free ngrok tunnel (`DISEASE_KB_SERVICE_URL` on the gateway points at the tunnel's public URL). This is a real fragility: it only works while the developer's PC, the local `disease_kb` process, and the ngrok tunnel are all running, and the URL changes if ngrok ever restarts (free tier has no fixed domain guarantee). This is the single weakest link in the deployed system.
+- render.yaml intentionally leaves every cross-service URL and `DATABASE_URL` unset (`sync: false`) — Render assigns public hostnames with an unpredictable random suffix at creation, and secrets never belong in a committed file. These are pasted in manually via the dashboard after each service's URL is known.
+
 ---
 
 ## Next steps (updated)
 
 Given actual progress, the highest-leverage next items are probably:
-1. **Confirm `disease_kb` actually works** — the BGE-M3 model download was mid-flight when work last paused; verify indexing completes and a real search query returns sensible results before building further on top of it.
+1. **Make `disease_kb` reliably reachable without depending on a developer's PC staying on** — either find/pay for enough RAM somewhere to host it permanently, or accept the ngrok-tunnel fragility as a known limitation for now.
 2. **Wire an `ANTHROPIC_API_KEY`** if/when available — unlocks real photo-based disease detection and would let AI Chat move off canned replies.
-3. **Water Resource Service** — the most-requested-sounding Phase 2 gap that's still fully unbuilt, and the "Water Resource Identification" section of the original product brief hasn't been touched at all yet.
-4. A real cloud deployment — everything currently runs on one developer's LAN; there's no path yet for a farmer outside that WiFi network to reach any of this.
+3. **Fertilizer Recommendation and Irrigation Planning Services** — the remaining unbuilt Phase 2 gaps, both straightforward extensions of data the Soil and Water services already produce.
+4. Real water-bodies (JRC/India-WRIS/OSM) and CGWB groundwater data ingestion to replace the Water service's mock provider — same "estimate first, wire up the real feed later" pattern already used for soil.

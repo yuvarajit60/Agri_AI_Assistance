@@ -269,6 +269,22 @@ abstract class AppStrings {
   String matchPercent(int pct);
   String get otherPossibleMatches;
   String get diagnoseCardSubtitle;
+
+  // Water Resources
+  String get waterResourcesTitle;
+  String get waterResourcesCardSubtitle;
+  String get nearbyWaterSources;
+  String get noWaterFeaturesFound;
+  String get groundwaterStatus;
+  String get borewellFeasibility;
+  String get irrigationFeasibilitySection;
+  String distanceAway(String km);
+  String depthBelowGround(String m);
+  String waterFeatureType(String type);
+  String seasonalAvailability(String value);
+  String waterAvailabilityLevel(String value);
+  String groundwaterCategory(String value);
+  String irrigationMethod(String value);
 }
 
 final appStringsProvider = Provider<AppStrings>((ref) {
@@ -744,6 +760,67 @@ class _EnStrings implements AppStrings {
   String get otherPossibleMatches => 'Other possible matches';
   @override
   String get diagnoseCardSubtitle => 'Photo + organic treatment guidance';
+
+  @override
+  String get waterResourcesTitle => 'Water Resources';
+  @override
+  String get waterResourcesCardSubtitle => 'Nearby water sources & irrigation feasibility';
+  @override
+  String get nearbyWaterSources => 'Nearby Water Sources';
+  @override
+  String get noWaterFeaturesFound => 'No nearby water features found in the estimate.';
+  @override
+  String get groundwaterStatus => 'Groundwater Status';
+  @override
+  String get borewellFeasibility => 'Borewell Feasibility';
+  @override
+  String get irrigationFeasibilitySection => 'Irrigation Feasibility';
+  @override
+  String distanceAway(String km) => '$km km away';
+  @override
+  String depthBelowGround(String m) => '$m m below ground';
+  @override
+  String waterFeatureType(String type) => switch (type) {
+        'river' => 'River',
+        'canal' => 'Canal',
+        'lake' => 'Lake',
+        'pond' => 'Pond',
+        'well' => 'Well',
+        'borewell' => 'Borewell',
+        'reservoir' => 'Reservoir',
+        'check_dam' => 'Check Dam',
+        'irrigation_channel' => 'Irrigation Channel',
+        _ => type,
+      };
+  @override
+  String seasonalAvailability(String value) => switch (value) {
+        'perennial' => 'Perennial (year-round)',
+        'seasonal' => 'Seasonal',
+        'monsoon_only' => 'Monsoon only',
+        _ => value,
+      };
+  @override
+  String waterAvailabilityLevel(String value) => switch (value) {
+        'low' => 'Low',
+        'moderate' => 'Moderate',
+        'high' => 'High',
+        _ => value,
+      };
+  @override
+  String groundwaterCategory(String value) => switch (value) {
+        'safe' => 'Safe',
+        'semi_critical' => 'Semi-Critical',
+        'critical' => 'Critical',
+        'over_exploited' => 'Over-Exploited',
+        _ => value,
+      };
+  @override
+  String irrigationMethod(String value) => switch (value) {
+        'gravity_fed' => 'Gravity-fed',
+        'pumped' => 'Pumped',
+        'limited' => 'Limited',
+        _ => value,
+      };
 }
 
 class _TaStrings implements AppStrings {
@@ -1214,4 +1291,65 @@ class _TaStrings implements AppStrings {
   String get otherPossibleMatches => 'மற்ற சாத்தியமான பொருத்தங்கள்';
   @override
   String get diagnoseCardSubtitle => 'புகைப்படம் + இயற்கை சிகிச்சை வழிகாட்டுதல்';
+
+  @override
+  String get waterResourcesTitle => 'நீர் வளங்கள்';
+  @override
+  String get waterResourcesCardSubtitle => 'அருகிலுள்ள நீர் ஆதாரங்கள் & பாசன சாத்தியக்கூறு';
+  @override
+  String get nearbyWaterSources => 'அருகிலுள்ள நீர் ஆதாரங்கள்';
+  @override
+  String get noWaterFeaturesFound => 'அருகில் நீர் ஆதாரங்கள் எதுவும் கிடைக்கவில்லை.';
+  @override
+  String get groundwaterStatus => 'நிலத்தடி நீர் நிலை';
+  @override
+  String get borewellFeasibility => 'ஆழ்குழாய் கிணறு சாத்தியக்கூறு';
+  @override
+  String get irrigationFeasibilitySection => 'பாசன சாத்தியக்கூறு';
+  @override
+  String distanceAway(String km) => '$km கி.மீ தொலைவில்';
+  @override
+  String depthBelowGround(String m) => 'தரைக்கு கீழே $m மீ ஆழத்தில்';
+  @override
+  String waterFeatureType(String type) => switch (type) {
+        'river' => 'ஆறு',
+        'canal' => 'கால்வாய்',
+        'lake' => 'ஏரி',
+        'pond' => 'குளம்',
+        'well' => 'கிணறு',
+        'borewell' => 'ஆழ்குழாய் கிணறு',
+        'reservoir' => 'நீர்த்தேக்கம்',
+        'check_dam' => 'தடுப்பணை (Check Dam)',
+        'irrigation_channel' => 'பாசன கால்வாய்',
+        _ => type,
+      };
+  @override
+  String seasonalAvailability(String value) => switch (value) {
+        'perennial' => 'வற்றாதது (ஆண்டு முழுவதும்)',
+        'seasonal' => 'பருவகாலம்',
+        'monsoon_only' => 'பருவமழை காலம் மட்டும்',
+        _ => value,
+      };
+  @override
+  String waterAvailabilityLevel(String value) => switch (value) {
+        'low' => 'குறைவு',
+        'moderate' => 'மிதமானது',
+        'high' => 'அதிகம்',
+        _ => value,
+      };
+  @override
+  String groundwaterCategory(String value) => switch (value) {
+        'safe' => 'பாதுகாப்பானது (Safe)',
+        'semi_critical' => 'செமி-கிரிட்டிகல் (கவனம் தேவை)',
+        'critical' => 'கிரிட்டிகல் (அதிக அழுத்தம்)',
+        'over_exploited' => 'ஓவர்-எக்ஸ்ப்ளாய்டட் (அதிகப் பயன்பாடு)',
+        _ => value,
+      };
+  @override
+  String irrigationMethod(String value) => switch (value) {
+        'gravity_fed' => 'ஈர்ப்பு விசை பாசனம்',
+        'pumped' => 'பம்ப் மூலம்',
+        'limited' => 'மட்டுப்படுத்தப்பட்டது',
+        _ => value,
+      };
 }

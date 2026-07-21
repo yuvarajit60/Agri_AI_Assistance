@@ -60,6 +60,13 @@ services:
     ports:
       - "8001:8000"
 
+  water:
+    build:
+      context: .
+      dockerfile: services/water/Dockerfile
+    ports:
+      - "8007:8000"
+
   disease_kb:
     build:
       context: .
@@ -82,6 +89,7 @@ services:
       GIS_SERVICE_URL: http://gis:8000
       FARM_REGISTRY_URL: http://farm_registry:8000
       DISEASE_KB_SERVICE_URL: http://disease_kb:8000
+      WATER_SERVICE_URL: http://water:8000
     depends_on:
       - soil
       - weather
@@ -89,6 +97,7 @@ services:
       - gis
       - farm_registry
       - disease_kb
+      - water
     ports:
       - "8000:8000"
 

@@ -21,6 +21,7 @@ from .config import (
     FARM_REGISTRY_URL,
     REQUEST_TIMEOUT_SECONDS,
     SOIL_SERVICE_URL,
+    WATER_SERVICE_URL,
     WEATHER_SERVICE_URL,
 )
 
@@ -113,12 +114,15 @@ async def dashboard(
         weather_task = _get(
             client, f"{WEATHER_SERVICE_URL}/weather/forecast", {"lat": lat, "lon": lon, "horizon": "7d"}
         )
-        soil, weather = await asyncio.gather(soil_task, weather_task)
+        water_task = _get(client, f"{WATER_SERVICE_URL}/water/analyze", {"lat": lat, "lon": lon})
+        soil, weather, water = await asyncio.gather(soil_task, weather_task, water_task)
 
         if soil is None:
             warnings.append("Soil service unavailable — land health and crop recommendations may be degraded.")
         if weather is None:
             warnings.append("Weather service unavailable — crop recommendations may be degraded.")
+        if water is None:
+            warnings.append("Water resource service unavailable.")
 
         crop_recommendations = None
         if soil is not None and weather is not None:
@@ -148,6 +152,7 @@ async def dashboard(
         "farm": {"lat": lat, "lon": lon, "area_acres": area_acres},
         "land_health": soil,
         "weather": weather,
+        "water_resources": water,
         "crop_recommendations": crop_recommendations,
         "warnings": warnings,
     }
@@ -214,6 +219,14 @@ async def proxy_update_farm(farm_id: str, payload: dict[str, Any]) -> Response:
 @app.delete("/farms/{farm_id}")
 async def proxy_delete_farm(farm_id: str) -> Response:
     return await _proxy("DELETE", f"/farms/{farm_id}")
+
+
+# --- Water Resource proxy ------------------------------------------------
+
+
+@app.get("/water/analyze")
+async def proxy_water_analyze(lat: float = Query(..., ge=-90, le=90), lon: float = Query(..., ge=-180, le=180)) -> Response:
+    return await _proxy("GET", f"/water/analyze?lat={lat}&lon={lon}", base_url=WATER_SERVICE_URL)
 
 
 # --- Disease Organic Knowledge Base (RAG) proxy -------------------------

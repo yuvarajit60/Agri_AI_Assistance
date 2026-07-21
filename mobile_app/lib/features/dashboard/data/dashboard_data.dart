@@ -7,6 +7,7 @@ class DashboardData {
     required this.generatedAt,
     this.landHealth,
     this.weather,
+    this.waterResources,
     this.cropRecommendation,
     this.warnings = const [],
   });
@@ -14,6 +15,7 @@ class DashboardData {
   final DateTime generatedAt;
   final LandHealthSection? landHealth;
   final WeatherSection? weather;
+  final WaterResourceSection? waterResources;
   final CropRecommendationSection? cropRecommendation;
   final List<String> warnings;
 
@@ -24,6 +26,9 @@ class DashboardData {
           ? LandHealthSection.fromJson(json['land_health'] as Map<String, dynamic>)
           : null,
       weather: json['weather'] != null ? WeatherSection.fromJson(json['weather'] as Map<String, dynamic>) : null,
+      waterResources: json['water_resources'] != null
+          ? WaterResourceSection.fromJson(json['water_resources'] as Map<String, dynamic>)
+          : null,
       cropRecommendation: json['crop_recommendations'] != null
           ? CropRecommendationSection.fromJson(json['crop_recommendations'] as Map<String, dynamic>)
           : null,
@@ -143,5 +148,63 @@ class CropRecommendation {
         timeToHarvestDays: (json['time_to_harvest_days'] as num?)?.toInt() ?? 0,
         riskLevel: json['risk_level'] as String? ?? 'medium',
         roiPercent: (json['roi_percent'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class WaterResourceSection {
+  const WaterResourceSection({
+    required this.features,
+    required this.groundwaterCategory,
+    required this.depthToWaterTableM,
+    required this.borewellFeasibility,
+    required this.irrigationMethod,
+    required this.nearestSourceDistanceKm,
+    required this.irrigationNotes,
+    required this.confidence,
+  });
+  final List<WaterFeature> features;
+  final String groundwaterCategory;
+  final double depthToWaterTableM;
+  final String borewellFeasibility;
+  final String irrigationMethod;
+  final double? nearestSourceDistanceKm;
+  final String irrigationNotes;
+  final double confidence;
+
+  factory WaterResourceSection.fromJson(Map<String, dynamic> json) {
+    final result = json['result'] as Map<String, dynamic>? ?? {};
+    final featuresRaw = (result['features'] as List?) ?? const [];
+    final groundwater = result['groundwater'] as Map<String, dynamic>? ?? {};
+    final irrigation = result['irrigation_feasibility'] as Map<String, dynamic>? ?? {};
+    return WaterResourceSection(
+      features: featuresRaw.map((f) => WaterFeature.fromJson(f as Map<String, dynamic>)).toList(),
+      groundwaterCategory: groundwater['category'] as String? ?? 'safe',
+      depthToWaterTableM: (groundwater['depth_to_water_table_m'] as num?)?.toDouble() ?? 0,
+      borewellFeasibility: groundwater['borewell_feasibility'] as String? ?? '',
+      irrigationMethod: irrigation['method'] as String? ?? 'limited',
+      nearestSourceDistanceKm: (irrigation['nearest_source_distance_km'] as num?)?.toDouble(),
+      irrigationNotes: irrigation['notes'] as String? ?? '',
+      confidence: (json['confidence_score'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class WaterFeature {
+  const WaterFeature({
+    required this.type,
+    required this.distanceKm,
+    required this.seasonalAvailability,
+    required this.estimatedWaterAvailability,
+  });
+  final String type;
+  final double distanceKm;
+  final String seasonalAvailability;
+  final String estimatedWaterAvailability;
+
+  factory WaterFeature.fromJson(Map<String, dynamic> json) => WaterFeature(
+        type: json['type'] as String? ?? 'well',
+        distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0,
+        seasonalAvailability: json['seasonal_availability'] as String? ?? 'seasonal',
+        estimatedWaterAvailability: json['estimated_water_availability'] as String? ?? 'moderate',
       );
 }
