@@ -285,6 +285,10 @@ abstract class AppStrings {
   String waterAvailabilityLevel(String value);
   String groundwaterCategory(String value);
   String irrigationMethod(String value);
+
+  // Crop recommendation names/terms (fixed vocabulary from the crop knowledge base)
+  String cropName(String name);
+  String cropTerm(String term);
 }
 
 final appStringsProvider = Provider<AppStrings>((ref) {
@@ -821,6 +825,16 @@ class _EnStrings implements AppStrings {
         'limited' => 'Limited',
         _ => value,
       };
+
+  @override
+  String cropName(String name) => name;
+  @override
+  String cropTerm(String term) => switch (term) {
+        'short-term' => 'Short-term',
+        'medium-term' => 'Medium-term',
+        'long-term' => 'Long-term',
+        _ => term,
+      };
 }
 
 class _TaStrings implements AppStrings {
@@ -1351,5 +1365,35 @@ class _TaStrings implements AppStrings {
         'pumped' => 'பம்ப் மூலம்',
         'limited' => 'மட்டுப்படுத்தப்பட்டது',
         _ => value,
+      };
+
+  @override
+  String cropName(String name) => switch (name) {
+        'Rice' => 'நெல்',
+        'Cotton' => 'பருத்தி',
+        'Maize' => 'மக்காச்சோளம்',
+        'Groundnut' => 'நிலக்கடலை',
+        'Pulses (Tur)' => 'பருப்பு வகைகள் (துவரை)',
+        'Millets (Bajra)' => 'சிறுதானியங்கள் (கம்பு)',
+        'Vegetables (Tomato)' => 'காய்கறிகள் (தக்காளி)',
+        'Wheat' => 'கோதுமை',
+        'Banana' => 'வாழை',
+        'Sugarcane' => 'கரும்பு',
+        'Papaya' => 'பப்பாளி',
+        'Mango' => 'மாம்பழம்',
+        'Coconut' => 'தென்னை',
+        'Pomegranate' => 'மாதுளை',
+        'Guava' => 'கொய்யா',
+        'Drumstick' => 'முருங்கை',
+        'Teak' => 'தேக்கு',
+        'No suitable crop found' => 'பொருத்தமான பயிர் எதுவும் கிடைக்கவில்லை',
+        _ => name,
+      };
+  @override
+  String cropTerm(String term) => switch (term) {
+        'short-term' => 'குறுகிய காலம்',
+        'medium-term' => 'இடைநிலை காலம்',
+        'long-term' => 'நீண்ட காலம்',
+        _ => term,
       };
 }

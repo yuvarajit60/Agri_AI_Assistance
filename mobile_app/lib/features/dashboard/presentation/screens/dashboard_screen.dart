@@ -588,14 +588,15 @@ class _LiveCropCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(crop.term, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary)),
+                child: Text(s.cropTerm(crop.term),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary)),
               ),
               Text('${crop.suitabilityPercent.toStringAsFixed(0)}%',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.primary)),
             ],
           ),
           const SizedBox(height: 6),
-          Text(crop.cropName, style: Theme.of(context).textTheme.titleMedium),
+          Text(s.cropName(crop.cropName), style: Theme.of(context).textTheme.titleMedium),
           const Spacer(),
           Text('₹${crop.expectedProfitInr.toStringAsFixed(0)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),

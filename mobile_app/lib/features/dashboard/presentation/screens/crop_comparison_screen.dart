@@ -71,8 +71,8 @@ class CropComparisonScreen extends ConsumerWidget {
 
     return DataRow(
       cells: [
-        DataCell(Text(crop.cropName, style: const TextStyle(fontWeight: FontWeight.w600))),
-        DataCell(Text(crop.term)),
+        DataCell(Text(s.cropName(crop.cropName), style: const TextStyle(fontWeight: FontWeight.w600))),
+        DataCell(Text(s.cropTerm(crop.term))),
         DataCell(Text('${crop.suitabilityPercent.toStringAsFixed(0)}%')),
         DataCell(Text(crop.expectedYieldQuintals.toStringAsFixed(1))),
         DataCell(Text('${crop.waterRequirementMm}')),
