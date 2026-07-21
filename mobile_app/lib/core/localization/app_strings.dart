@@ -256,12 +256,14 @@ abstract class AppStrings {
   String get cropHint;
   String get symptomsLabel;
   String get symptomsHint;
+  String get symptomsHintWithPhoto;
   String get enterSymptomsError;
+  String get enterSymptomsOrPhotoError;
   String get treatmentPreference;
   String get organicOption;
   String get chemicalOption;
   String get getGuidance;
-  String get photoUploadedNote;
+  String get analyzingPhotoNote;
   String get symptomsSectionTitle;
   String get organicTreatmentSectionTitle;
   String get preventionSectionTitle;
@@ -738,7 +740,11 @@ class _EnStrings implements AppStrings {
   @override
   String get symptomsHint => 'e.g. yellow spots with brown edges on older leaves';
   @override
+  String get symptomsHintWithPhoto => 'Optional — add anything the photo might not show';
+  @override
   String get enterSymptomsError => 'Describe the symptoms first';
+  @override
+  String get enterSymptomsOrPhotoError => 'Add a photo or describe the symptoms';
   @override
   String get treatmentPreference => 'Treatment preference';
   @override
@@ -748,8 +754,7 @@ class _EnStrings implements AppStrings {
   @override
   String get getGuidance => 'Get guidance';
   @override
-  String get photoUploadedNote =>
-      "Photo received — describe symptoms below for guidance (automatic photo analysis isn't available yet).";
+  String get analyzingPhotoNote => 'Analyzing photo against our disease knowledge base...';
   @override
   String get symptomsSectionTitle => 'Symptoms';
   @override
@@ -1279,7 +1284,11 @@ class _TaStrings implements AppStrings {
   @override
   String get symptomsHint => 'உதா. பழைய இலைகளில் பழுப்பு விளிம்புகளுடன் மஞ்சள் புள்ளிகள்';
   @override
+  String get symptomsHintWithPhoto => 'விருப்பம் — புகைப்படத்தில் தெரியாதவற்றை இங்கே சேர்க்கவும்';
+  @override
   String get enterSymptomsError => 'முதலில் அறிகுறிகளை விவரிக்கவும்';
+  @override
+  String get enterSymptomsOrPhotoError => 'ஒரு புகைப்படத்தைச் சேர்க்கவும் அல்லது அறிகுறிகளை விவரிக்கவும்';
   @override
   String get treatmentPreference => 'சிகிச்சை விருப்பம்';
   @override
@@ -1289,8 +1298,7 @@ class _TaStrings implements AppStrings {
   @override
   String get getGuidance => 'வழிகாட்டுதலைப் பெறவும்';
   @override
-  String get photoUploadedNote =>
-      'புகைப்படம் பெறப்பட்டது — வழிகாட்டுதலுக்கு கீழே அறிகுறிகளை விவரிக்கவும் (தானியங்கி புகைப்பட பகுப்பாய்வு இன்னும் கிடைக்கவில்லை).';
+  String get analyzingPhotoNote => 'புகைப்படத்தை எங்கள் நோய் தரவுத்தளத்துடன் பகுப்பாய்வு செய்கிறது...';
   @override
   String get symptomsSectionTitle => 'அறிகுறிகள்';
   @override

@@ -267,12 +267,16 @@ async def proxy_diagnose_photo(
 ) -> Response:
     contents = await photo.read()
     try:
+        # Vision analysis (disease_kb -> Claude) plus the image upload itself
+        # routinely take longer than the other proxied calls' text-only
+        # REQUEST_TIMEOUT_SECONDS, especially over the local ngrok tunnel —
+        # give it its own longer budget rather than risk a false 503.
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 f"{DISEASE_KB_SERVICE_URL}/disease/diagnose-photo",
                 data={"crop": crop, "notes": notes, "language": language},
                 files={"photo": (photo.filename, contents, photo.content_type)},
-                timeout=REQUEST_TIMEOUT_SECONDS,
+                timeout=max(REQUEST_TIMEOUT_SECONDS, 60.0),
             )
     except httpx.HTTPError as exc:
         return JSONResponse(status_code=503, content={"detail": f"Disease knowledge base unavailable: {exc}"})

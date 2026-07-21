@@ -33,10 +33,12 @@ class DiseaseRepository {
     return GuidanceEnvelope.fromJson(resp.data!);
   }
 
-  /// Uploads the photo for real (proving the pipeline works end to end);
-  /// the backend is honest about whether it could actually be analyzed —
-  /// see disease_kb/app/main.py's diagnose_photo for why a guess isn't
-  /// fabricated when no vision model is configured.
+  /// Uploads the photo and runs a real Claude vision diagnosis, constrained
+  /// server-side to the curated organic disease knowledge base — see
+  /// disease_kb/app/main.py's diagnose_photo + vision.py. Vision analysis
+  /// plus the upload itself routinely take longer than the app's default
+  /// 45s receive timeout, so this call gets its own longer budget (gateway
+  /// waits up to 60s per app/main.py's proxy_diagnose_photo).
   Future<GuidanceEnvelope> diagnosePhoto({
     required File photo,
     required String crop,
@@ -49,7 +51,11 @@ class DiseaseRepository {
       'language': language,
       'photo': await MultipartFile.fromFile(photo.path, filename: photo.uri.pathSegments.last),
     });
-    final resp = await apiClient.post<Map<String, dynamic>>('/disease/diagnose-photo', data: formData);
+    final resp = await apiClient.post<Map<String, dynamic>>(
+      '/disease/diagnose-photo',
+      data: formData,
+      options: Options(receiveTimeout: const Duration(seconds: 70)),
+    );
     return GuidanceEnvelope.fromJson(resp.data!);
   }
 }

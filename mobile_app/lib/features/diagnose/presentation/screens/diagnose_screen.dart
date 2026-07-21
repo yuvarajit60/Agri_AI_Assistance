@@ -26,7 +26,6 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
   bool _organic = true;
   bool _submitting = false;
   String? _error;
-  GuidanceEnvelope? _photoNote;
   GuidanceEnvelope? _result;
 
   @override
@@ -42,7 +41,6 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
     if (picked == null) return;
     setState(() {
       _photo = File(picked.path);
-      _photoNote = null;
       _result = null;
     });
   }
@@ -84,8 +82,8 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
     final crop = _cropController.text.trim();
     final symptoms = _symptomsController.text.trim();
 
-    if (symptoms.isEmpty) {
-      setState(() => _error = s.enterSymptomsError);
+    if (_photo == null && symptoms.isEmpty) {
+      setState(() => _error = s.enterSymptomsOrPhotoError);
       return;
     }
 
@@ -96,17 +94,23 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
     });
 
     try {
-      // Uploading the photo (if any) is a real, working step even though
-      // automated visual analysis isn't available yet — see
-      // disease_kb/app/main.py for why that's an honest gap, not a mock.
-      if (_photo != null) {
-        _photoNote = await repo.diagnosePhoto(photo: _photo!, crop: crop, notes: symptoms, language: language);
-      }
-
-      final query = crop.isEmpty ? symptoms : '$crop: $symptoms';
-      final result = _organic
-          ? await repo.searchOrganicGuidance(query: query, crop: crop.isEmpty ? null : crop, language: language)
-          : await repo.chemicalGuidance(query: query, crop: crop.isEmpty ? null : crop, language: language);
+      // A photo drives a real Claude vision diagnosis (see
+      // disease_kb/app/main.py's diagnose_photo + vision.py) constrained to
+      // our curated disease knowledge base — this is the primary result
+      // when a photo is present, not just an upload confirmation.
+      final result = _photo != null
+          ? await repo.diagnosePhoto(photo: _photo!, crop: crop, notes: symptoms, language: language)
+          : _organic
+              ? await repo.searchOrganicGuidance(
+                  query: crop.isEmpty ? symptoms : '$crop: $symptoms',
+                  crop: crop.isEmpty ? null : crop,
+                  language: language,
+                )
+              : await repo.chemicalGuidance(
+                  query: crop.isEmpty ? symptoms : '$crop: $symptoms',
+                  crop: crop.isEmpty ? null : crop,
+                  language: language,
+                );
 
       setState(() {
         _submitting = false;
@@ -174,7 +178,7 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
           TextFormField(
             controller: _symptomsController,
             maxLines: 3,
-            decoration: InputDecoration(hintText: s.symptomsHint),
+            decoration: InputDecoration(hintText: _photo != null ? s.symptomsHintWithPhoto : s.symptomsHint),
           ),
           const SizedBox(height: 20),
           Text(s.treatmentPreference, style: Theme.of(context).textTheme.titleSmall),
@@ -193,9 +197,9 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
           ],
           const SizedBox(height: 24),
           PrimaryButton(label: s.getGuidance, onPressed: _submit, isLoading: _submitting),
-          if (_photoNote != null) ...[
+          if (_submitting && _photo != null) ...[
             const SizedBox(height: 16),
-            _NoteBanner(text: s.photoUploadedNote),
+            _NoteBanner(text: s.analyzingPhotoNote),
           ],
           if (_result != null) ...[
             const SizedBox(height: 24),
