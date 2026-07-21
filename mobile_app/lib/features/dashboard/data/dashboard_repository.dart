@@ -10,6 +10,7 @@ abstract class DashboardRepository {
     required double areaAcres,
     String season = 'any',
     SoilLabReport? soilReport,
+    String language = 'en',
   });
 }
 
@@ -21,12 +22,14 @@ class GatewayDashboardRepository implements DashboardRepository {
     required double areaAcres,
     String season = 'any',
     SoilLabReport? soilReport,
+    String language = 'en',
   }) async {
     final query = <String, dynamic>{
       'lat': latitude,
       'lon': longitude,
       'area_acres': areaAcres,
       'season': season,
+      'language': language,
     };
     if (soilReport != null) {
       query.addAll({

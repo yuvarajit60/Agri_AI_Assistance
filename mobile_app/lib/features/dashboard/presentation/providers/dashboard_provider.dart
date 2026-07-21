@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/language_provider.dart';
 import '../../../farms/data/farm.dart';
 import '../../data/dashboard_data.dart';
 import '../../data/dashboard_repository.dart';
@@ -7,9 +8,10 @@ import '../../data/dashboard_repository.dart';
 final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) => GatewayDashboardRepository());
 
 class DashboardController extends StateNotifier<AsyncValue<DashboardData?>> {
-  DashboardController(this._repository) : super(const AsyncValue.data(null));
+  DashboardController(this._repository, this._ref) : super(const AsyncValue.data(null));
 
   final DashboardRepository _repository;
+  final Ref _ref;
 
   Future<void> loadForFarm(Farm farm) async {
     state = const AsyncValue.loading();
@@ -19,6 +21,7 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData?>> {
         longitude: farm.longitude,
         areaAcres: farm.areaAcres,
         soilReport: farm.soilReport,
+        language: _ref.read(languageProvider),
       );
       state = AsyncValue.data(data);
     } on DioException catch (e, st) {
@@ -36,5 +39,5 @@ class DashboardController extends StateNotifier<AsyncValue<DashboardData?>> {
 }
 
 final dashboardControllerProvider = StateNotifierProvider<DashboardController, AsyncValue<DashboardData?>>((ref) {
-  return DashboardController(ref.watch(dashboardRepositoryProvider));
+  return DashboardController(ref.watch(dashboardRepositoryProvider), ref);
 });

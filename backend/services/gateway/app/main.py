@@ -89,6 +89,7 @@ async def dashboard(
     soil_n: float | None = Query(None, ge=0),
     soil_p: float | None = Query(None, ge=0),
     soil_k: float | None = Query(None, ge=0),
+    language: str = Query("en", pattern="^(en|ta)$"),
 ) -> dict[str, Any]:
     warnings: list[str] = []
     lab_report_supplied = None not in (soil_ph, soil_ec, soil_oc, soil_n, soil_p, soil_k)
@@ -114,7 +115,7 @@ async def dashboard(
         weather_task = _get(
             client, f"{WEATHER_SERVICE_URL}/weather/forecast", {"lat": lat, "lon": lon, "horizon": "7d"}
         )
-        water_task = _get(client, f"{WATER_SERVICE_URL}/water/analyze", {"lat": lat, "lon": lon})
+        water_task = _get(client, f"{WATER_SERVICE_URL}/water/analyze", {"lat": lat, "lon": lon, "language": language})
         soil, weather, water = await asyncio.gather(soil_task, weather_task, water_task)
 
         if soil is None:
@@ -225,8 +226,12 @@ async def proxy_delete_farm(farm_id: str) -> Response:
 
 
 @app.get("/water/analyze")
-async def proxy_water_analyze(lat: float = Query(..., ge=-90, le=90), lon: float = Query(..., ge=-180, le=180)) -> Response:
-    return await _proxy("GET", f"/water/analyze?lat={lat}&lon={lon}", base_url=WATER_SERVICE_URL)
+async def proxy_water_analyze(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    language: str = Query("en", pattern="^(en|ta)$"),
+) -> Response:
+    return await _proxy("GET", f"/water/analyze?lat={lat}&lon={lon}&language={language}", base_url=WATER_SERVICE_URL)
 
 
 # --- Disease Organic Knowledge Base (RAG) proxy -------------------------
