@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 Season = Literal["kharif", "rabi", "zaid", "any"]
 Term = Literal["short-term", "medium-term", "long-term"]
+IrrigationMethod = Literal["gravity_fed", "pumped", "limited"]
 
 
 class CropRecommendationRequest(BaseModel):
@@ -16,6 +17,9 @@ class CropRecommendationRequest(BaseModel):
     current_season: Season = "any"
     soil_confidence: float = Field(0.6, ge=0, le=1, description="Confidence carried over from the Soil service")
     weather_confidence: float = Field(0.8, ge=0, le=1, description="Confidence carried over from the Weather service")
+    irrigation_method: IrrigationMethod | None = Field(
+        None, description="From the Water Resource Service — a reliable irrigation source lets a crop draw on more than rainfall alone"
+    )
     term_filter: Term | None = None
     top_n: int = Field(5, ge=1, le=17)
 

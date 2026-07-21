@@ -52,3 +52,39 @@ def test_recommend_handles_no_viable_crop():
     body = resp.json()
     assert body["result"]["crop_name"] == "No suitable crop found"
     assert body["risk_analysis"]["level"] == "high"
+
+
+def test_gravity_fed_irrigation_rescues_otherwise_unviable_water_availability():
+    """Same rainfall-starved inputs as the no-viable-crop case above, but
+    with a gravity-fed water source nearby — should now find a candidate,
+    proving irrigation access actually widens the hard filter, not just
+    the score."""
+    base_payload = {
+        "farm_area_acres": 1,
+        "soil_ph": 6.5,
+        "seasonal_rainfall_mm": 800,
+        "water_availability_mm": 10,
+        "current_season": "kharif",
+    }
+    without_irrigation = client.post("/crops/recommend", json=base_payload).json()
+    assert without_irrigation["result"]["crop_name"] == "No suitable crop found"
+
+    with_irrigation = client.post(
+        "/crops/recommend", json={**base_payload, "irrigation_method": "gravity_fed"}
+    ).json()
+    assert with_irrigation["result"]["crop_name"] != "No suitable crop found"
+    assert with_irrigation["result"]["suitability_percent"] > 0
+    assert any("irrigation" in a.lower() for a in with_irrigation["assumptions"])
+
+
+def test_pumped_irrigation_improves_suitability_over_rainfall_alone():
+    payload = {
+        "farm_area_acres": 1,
+        "soil_ph": 6.8,
+        "seasonal_rainfall_mm": 850,
+        "water_availability_mm": 900,
+        "current_season": "kharif",
+    }
+    without = client.post("/crops/recommend", json=payload).json()
+    with_pump = client.post("/crops/recommend", json={**payload, "irrigation_method": "pumped"}).json()
+    assert with_pump["result"]["suitability_percent"] >= without["result"]["suitability_percent"]

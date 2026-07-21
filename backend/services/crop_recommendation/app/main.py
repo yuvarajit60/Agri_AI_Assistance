@@ -50,23 +50,40 @@ def recommend(req: CropRecommendationRequest) -> RecommendationEnvelope[CropReco
         )
 
     top, *rest = ranked
+    data_sources = [
+        DataSource(name="Internal crop knowledge base v0.1", as_of=now, live=False),
+        DataSource(name="Soil service output", as_of=now, live=req.soil_confidence >= 0.75),
+        DataSource(name="Weather service forecast", as_of=now, live=req.weather_confidence >= 0.75),
+    ]
+    assumptions = [
+        "Yield and cost figures are regional reference values from the curated crop knowledge base, "
+        "not this specific farm's historical data.",
+        "Expected profit uses each crop's reference price, not a live market forecast.",
+    ]
+    reasoning = (
+        f"{top.crop_name} ranked highest ({top.suitability_percent}% suitability) based on soil pH fit, "
+        "seasonal rainfall fit, and water availability margin."
+    )
+    if req.irrigation_method is not None:
+        data_sources.append(DataSource(name="Water Resource Service (irrigation feasibility)", as_of=now, live=False))
+        if req.irrigation_method in ("gravity_fed", "pumped"):
+            assumptions.append(
+                f"Water availability was boosted beyond rainfall alone because a {req.irrigation_method.replace('_', ' ')} "
+                "irrigation source was found nearby — this widens which crops clear the water requirement, "
+                "not just how they're scored."
+            )
+        else:
+            assumptions.append(
+                "No reliable irrigation source was found nearby, so water availability reflects rainfall alone — "
+                "this is more conservative than a farm with irrigation access would see."
+            )
+
     return RecommendationEnvelope[CropRecommendationResult](
         result=top,
         confidence_score=confidence,
-        data_sources=[
-            DataSource(name="Internal crop knowledge base v0.1", as_of=now, live=False),
-            DataSource(name="Soil service output", as_of=now, live=req.soil_confidence >= 0.75),
-            DataSource(name="Weather service forecast", as_of=now, live=req.weather_confidence >= 0.75),
-        ],
-        assumptions=[
-            "Yield and cost figures are regional reference values from the curated crop knowledge base, "
-            "not this specific farm's historical data.",
-            "Expected profit uses each crop's reference price, not a live market forecast.",
-        ],
-        reasoning=(
-            f"{top.crop_name} ranked highest ({top.suitability_percent}% suitability) based on soil pH fit, "
-            "seasonal rainfall fit, and water availability margin."
-        ),
+        data_sources=data_sources,
+        assumptions=assumptions,
+        reasoning=reasoning,
         model_used=ModelUsed(name="crop-suitability-rule-engine", version="0.1.0"),
         alternatives=rest,
         risk_analysis=RiskAnalysis(

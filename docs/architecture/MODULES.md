@@ -66,6 +66,8 @@ Two-stage pipeline:
 
 Crops are grouped short/medium/long-term per the brief's examples; the crop knowledge base (agro-climatic requirements, typical costs, typical yields per region) is a curated, versioned dataset seeded from ICAR/state agriculture department package-of-practices documents, not invented by the LLM.
 
+**Implementation note:** the "soil/water/weather match" this section describes was soil+weather only until the Water Resource Service existed to provide the water half. Now wired up — the gateway passes the Water service's `irrigation_method` (gravity_fed/pumped/limited) into `/crops/recommend`, and a reliable irrigation source genuinely widens the hard filter (not just the score): gravity-fed access treats water as effectively abundant (any crop in the knowledge base can be irrigated), pumped access multiplies rainfall-derived availability by 1.6x, and no source falls back to the original rainfall-only behavior. See `backend/services/crop_recommendation/app/engine.py`'s `_effective_water_availability`.
+
 ## 7. Smart Comparison
 
 A stateless view over Crop Recommendation Engine output — no new computation, just a side-by-side table (suitability, investment, water need, yield, profit, risk, ROI, harvest duration, rank) for farmer-selected crops. Lives at the API Gateway composition layer.

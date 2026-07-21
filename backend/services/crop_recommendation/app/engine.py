@@ -12,13 +12,36 @@ from .schemas import CropRecommendationRequest, CropRecommendationResult
 WATER_TOLERANCE = 1.15  # a crop needing slightly more than what's available isn't auto-rejected
 PH_TOLERANCE = 0.5
 
+# Highest water_need_mm_per_season in the knowledge base is Sugarcane at
+# 2000mm — a gravity-fed source is cheap enough to run that it's treated as
+# removing water as the binding constraint entirely for any crop here,
+# rather than trying to invent a precise volumetric flow-rate estimate the
+# Water service doesn't actually provide. Pumped is real but costs money to
+# run, so it's a meaningful boost, not a ceiling.
+GRAVITY_FED_WATER_FLOOR_MM = 2500.0
+PUMPED_WATER_MULTIPLIER = 1.6
 
-def _passes_hard_filter(crop: CropProfile, req: CropRecommendationRequest) -> bool:
+
+def _effective_water_availability(req: CropRecommendationRequest) -> float:
+    """Rainfall alone understates what a farm with real irrigation access
+    can actually give a crop, and overstates what a farm with no nearby
+    source can rely on through a dry spell — see docs/architecture/
+    MODULES.md §6. irrigation_method comes from the Water Resource
+    Service; None (service unreachable, or genuinely no source) falls
+    back to the original rainfall-only behavior."""
+    if req.irrigation_method == "gravity_fed":
+        return max(req.water_availability_mm, GRAVITY_FED_WATER_FLOOR_MM)
+    if req.irrigation_method == "pumped":
+        return req.water_availability_mm * PUMPED_WATER_MULTIPLIER
+    return req.water_availability_mm
+
+
+def _passes_hard_filter(crop: CropProfile, req: CropRecommendationRequest, effective_water_mm: float) -> bool:
     if req.term_filter is not None and crop.term != req.term_filter:
         return False
     if req.current_season != "any" and "perennial" not in crop.seasons and req.current_season not in crop.seasons:
         return False
-    if crop.water_need_mm_per_season > req.water_availability_mm * WATER_TOLERANCE:
+    if crop.water_need_mm_per_season > effective_water_mm * WATER_TOLERANCE:
         return False
     lo, hi = crop.suitable_soil_ph
     if not (lo - PH_TOLERANCE <= req.soil_ph <= hi + PH_TOLERANCE):
@@ -52,15 +75,17 @@ def _water_margin_fit(crop: CropProfile, water_availability_mm: float) -> float:
     return max(0.0, min(1.0, ratio))
 
 
-def _suitability(crop: CropProfile, req: CropRecommendationRequest) -> float:
+def _suitability(crop: CropProfile, req: CropRecommendationRequest, effective_water_mm: float) -> float:
     ph_fit = _ph_fit(crop, req.soil_ph)
     rainfall_fit = _rainfall_fit(crop, req.seasonal_rainfall_mm)
-    water_fit = _water_margin_fit(crop, req.water_availability_mm)
+    water_fit = _water_margin_fit(crop, effective_water_mm)
     score = 0.35 * ph_fit + 0.30 * rainfall_fit + 0.35 * water_fit
     return round(score * 100, 1)
 
 
-def _economics(crop: CropProfile, req: CropRecommendationRequest, suitability: float) -> CropRecommendationResult:
+def _economics(
+    crop: CropProfile, req: CropRecommendationRequest, suitability: float, effective_water_mm: float
+) -> CropRecommendationResult:
     # Yield scales down from the reference figure as suitability drops below 100%,
     # floored at 40% of reference so a marginal-but-passing crop isn't zeroed out.
     yield_factor = 0.4 + 0.6 * (suitability / 100)
@@ -74,7 +99,7 @@ def _economics(crop: CropProfile, req: CropRecommendationRequest, suitability: f
     roi = round((profit / total_cost) * 100, 1) if total_cost > 0 else 0.0
 
     risk_level = crop.risk_level
-    if _water_margin_fit(crop, req.water_availability_mm) < 0.85 and risk_level == "low":
+    if _water_margin_fit(crop, effective_water_mm) < 0.85 and risk_level == "low":
         risk_level = "medium"  # tight water margin bumps risk even for an otherwise-safe crop
 
     return CropRecommendationResult(
@@ -93,10 +118,11 @@ def _economics(crop: CropProfile, req: CropRecommendationRequest, suitability: f
 
 
 def recommend_crops(req: CropRecommendationRequest) -> list[CropRecommendationResult]:
-    candidates = [c for c in CROP_KNOWLEDGE_BASE if _passes_hard_filter(c, req)]
-    scored = [(c, _suitability(c, req)) for c in candidates]
+    effective_water_mm = _effective_water_availability(req)
+    candidates = [c for c in CROP_KNOWLEDGE_BASE if _passes_hard_filter(c, req, effective_water_mm)]
+    scored = [(c, _suitability(c, req, effective_water_mm)) for c in candidates]
     scored.sort(key=lambda pair: pair[1], reverse=True)
-    return [_economics(c, req, score) for c, score in scored[: req.top_n]]
+    return [_economics(c, req, score, effective_water_mm) for c, score in scored[: req.top_n]]
 
 
 def overall_confidence(req: CropRecommendationRequest) -> float:

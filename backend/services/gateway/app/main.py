@@ -140,6 +140,7 @@ async def dashboard(
                     "current_season": season,
                     "soil_confidence": soil["confidence_score"],
                     "weather_confidence": weather["confidence_score"],
+                    "irrigation_method": water["result"]["irrigation_feasibility"]["method"] if water else None,
                     "top_n": 5,
                 },
             )
