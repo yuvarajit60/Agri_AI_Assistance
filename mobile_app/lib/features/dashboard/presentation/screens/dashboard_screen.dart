@@ -532,7 +532,10 @@ class _CropRecommendationsLive extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 150,
+          // Taller than a plain 2-line English crop name needs, because
+          // longer translated names (e.g. Tamil's "பருப்பு வகைகள் (துவரை)")
+          // can wrap to 3 lines.
+          height: 190,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: all.length,
@@ -596,7 +599,7 @@ class _LiveCropCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(s.cropName(crop.cropName), style: Theme.of(context).textTheme.titleMedium),
+          Text(s.cropName(crop.cropName), style: Theme.of(context).textTheme.titleMedium, maxLines: 3, overflow: TextOverflow.ellipsis),
           const Spacer(),
           Text('₹${crop.expectedProfitInr.toStringAsFixed(0)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
