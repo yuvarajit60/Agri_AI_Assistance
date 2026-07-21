@@ -84,8 +84,17 @@ class WaterResourceScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(s.irrigationMethod(section.irrigationMethod), style: Theme.of(context).textTheme.headlineMedium),
+                      // Expanded so longer translated text (e.g. Tamil's
+                      // "ஈர்ப்பு விசை பாசனம்") wraps within the remaining row
+                      // width instead of pushing the distance text off-screen.
+                      Expanded(
+                        child: Text(
+                          s.irrigationMethod(section.irrigationMethod),
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ),
                       if (section.nearestSourceDistanceKm != null) ...[
                         const SizedBox(width: 10),
                         Text(
