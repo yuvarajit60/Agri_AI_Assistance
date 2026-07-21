@@ -1,3 +1,5 @@
+import '../../market/data/market_models.dart';
+
 /// Defensive parsing of the gateway's `/dashboard` response
 /// (services/gateway/app/main.py). Every section is nullable because the
 /// gateway itself degrades gracefully — a downstream service being down
@@ -9,6 +11,7 @@ class DashboardData {
     this.weather,
     this.waterResources,
     this.cropRecommendation,
+    this.marketForecast,
     this.warnings = const [],
   });
 
@@ -17,6 +20,7 @@ class DashboardData {
   final WeatherSection? weather;
   final WaterResourceSection? waterResources;
   final CropRecommendationSection? cropRecommendation;
+  final MarketForecastSection? marketForecast;
   final List<String> warnings;
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -31,6 +35,9 @@ class DashboardData {
           : null,
       cropRecommendation: json['crop_recommendations'] != null
           ? CropRecommendationSection.fromJson(json['crop_recommendations'] as Map<String, dynamic>)
+          : null,
+      marketForecast: json['market_forecast'] != null
+          ? MarketForecastSection.fromJson(json['market_forecast'] as Map<String, dynamic>)
           : null,
       warnings: (json['warnings'] as List?)?.cast<String>() ?? const [],
     );

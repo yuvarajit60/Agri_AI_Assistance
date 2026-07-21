@@ -19,6 +19,7 @@ from .config import (
     CROP_SERVICE_URL,
     DISEASE_KB_SERVICE_URL,
     FARM_REGISTRY_URL,
+    MARKET_SERVICE_URL,
     REQUEST_TIMEOUT_SECONDS,
     SOIL_SERVICE_URL,
     WATER_SERVICE_URL,
@@ -149,6 +150,25 @@ async def dashboard(
         else:
             warnings.append("Skipped crop recommendations — requires both soil and weather data.")
 
+        # Market forecast needs the top recommended crop's name, which only
+        # exists once crop_recommendations has resolved above — this is a
+        # genuine sequential dependency, unlike soil/weather/water which
+        # gather() in parallel with no such ordering constraint.
+        market_forecast = None
+        top_crop_name = (
+            crop_recommendations["result"]["crop_name"] if crop_recommendations is not None else None
+        )
+        if top_crop_name and top_crop_name != "No suitable crop found":
+            market_forecast = await _post(
+                client,
+                f"{MARKET_SERVICE_URL}/market/price-forecast",
+                {"commodity": top_crop_name, "lat": lat, "lon": lon, "language": language},
+            )
+            if market_forecast is None:
+                warnings.append("Market price service unavailable.")
+        else:
+            warnings.append("Skipped market forecast — no recommended crop to forecast for.")
+
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "farm": {"lat": lat, "lon": lon, "area_acres": area_acres},
@@ -156,6 +176,7 @@ async def dashboard(
         "weather": weather,
         "water_resources": water,
         "crop_recommendations": crop_recommendations,
+        "market_forecast": market_forecast,
         "warnings": warnings,
     }
 
@@ -233,6 +254,14 @@ async def proxy_water_analyze(
     language: str = Query("en", pattern="^(en|ta)$"),
 ) -> Response:
     return await _proxy("GET", f"/water/analyze?lat={lat}&lon={lon}&language={language}", base_url=WATER_SERVICE_URL)
+
+
+# --- Market Price Prediction proxy ---------------------------------------
+
+
+@app.post("/market/price-forecast")
+async def proxy_market_price_forecast(payload: dict[str, Any]) -> Response:
+    return await _proxy("POST", "/market/price-forecast", json=payload, base_url=MARKET_SERVICE_URL)
 
 
 # --- Disease Organic Knowledge Base (RAG) proxy -------------------------

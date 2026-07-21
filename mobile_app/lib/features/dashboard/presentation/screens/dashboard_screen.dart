@@ -9,8 +9,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../farms/data/farm.dart';
 import '../../../farms/presentation/providers/farm_provider.dart';
 import '../../../farms/presentation/widgets/soil_report_sheet.dart';
+import '../../../market/data/market_models.dart';
 import '../../data/dashboard_data.dart';
-import '../../data/mock_dashboard_data.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/dashboard_section_card.dart';
 import '../widgets/land_health_gauge.dart';
@@ -83,6 +83,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _CropRecommendationsLive(section: dashboardState.value!.cropRecommendation!, s: s),
                         const SizedBox(height: 14),
                       ],
+                      if (dashboardState.value!.marketForecast != null) ...[
+                        _MarketForecastCard(section: dashboardState.value!.marketForecast!, s: s),
+                        const SizedBox(height: 14),
+                      ],
                     ],
                     DashboardSectionCard(
                       title: s.diagnoseTitle,
@@ -92,22 +96,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     const SizedBox(height: 14),
                     _DemoDataNotice(s: s),
-                    const SizedBox(height: 14),
-                    DashboardSectionCard(
-                      title: s.marketPredictionTitle(MockDashboardData.marketCommodity),
-                      icon: Icons.storefront_rounded,
-                      trailing: const ConfidenceBadge(score: MockDashboardData.marketConfidence, compact: true),
-                      onTap: () => context.go('/market'),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(MockDashboardData.marketPriceRange, style: Theme.of(context).textTheme.headlineMedium),
-                          const SizedBox(height: 4),
-                          Text(s.bestSellingMonth(MockDashboardData.marketBestMonth),
-                              style: Theme.of(context).textTheme.bodyMedium),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -501,6 +489,33 @@ class _WaterResourceCard extends StatelessWidget {
             '${s.irrigationFeasibilitySection}: ${s.irrigationMethod(section.irrigationMethod)}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MarketForecastCard extends StatelessWidget {
+  const _MarketForecastCard({required this.section, required this.s});
+  final MarketForecastSection section;
+  final AppStrings s;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSectionCard(
+      title: s.marketPredictionTitle(s.cropName(section.commodity)),
+      icon: Icons.storefront_rounded,
+      trailing: ConfidenceBadge(score: section.confidence, compact: true),
+      onTap: () => context.go('/market'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '₹${section.nearTermLowInr.round()} – ₹${section.nearTermHighInr.round()} / quintal',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(s.bestSellingMonth(section.bestSellingMonth), style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );

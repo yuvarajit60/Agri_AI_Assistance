@@ -3,60 +3,134 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/confidence_badge.dart';
-import '../../../dashboard/data/mock_dashboard_data.dart';
+import '../../../dashboard/presentation/providers/dashboard_provider.dart';
+import '../../../farms/presentation/providers/farm_provider.dart';
+import '../../data/market_models.dart';
 
-class MarketScreen extends ConsumerWidget {
+/// A bottom-nav tab (see app_router.dart), so unlike /water this screen
+/// can be reached without any `extra` payload -- it reads the same
+/// dashboardControllerProvider the dashboard tab already populated
+/// (services/gateway/app/main.py's /dashboard now resolves market_forecast
+/// as part of the same fan-out), rather than re-fetching independently.
+class MarketScreen extends ConsumerStatefulWidget {
   const MarketScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MarketScreen> createState() => _MarketScreenState();
+}
+
+class _MarketScreenState extends ConsumerState<MarketScreen> {
+  bool _triedInitialLoad = false;
+
+  @override
+  Widget build(BuildContext context) {
     final s = ref.watch(appStringsProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text(s.marketIntelligenceTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(MockDashboardData.marketCommodity, style: Theme.of(context).textTheme.titleLarge),
-                      ),
-                      const ConfidenceBadge(score: MockDashboardData.marketConfidence),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(s.predictedPriceRange, style: Theme.of(context).textTheme.bodySmall),
-                  Text(MockDashboardData.marketPriceRange, style: Theme.of(context).textTheme.displayMedium),
-                  const SizedBox(height: 8),
-                  Text(s.bestSellingMonth(MockDashboardData.marketBestMonth),
-                      style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(s.nearbyMandis, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          _MandiTile(name: 'Nashik APMC', distance: '6.2 km', price: '₹7,150 / quintal'),
-          _MandiTile(name: 'Lasalgaon Market', distance: '14.8 km', price: '₹7,320 / quintal'),
-          _MandiTile(name: 'Pimpalgaon Mandi', distance: '21.4 km', price: '₹6,980 / quintal'),
-        ],
+    final activeFarm = ref.watch(activeFarmProvider);
+    final dashboardState = ref.watch(dashboardControllerProvider);
+
+    if (!_triedInitialLoad && activeFarm != null && dashboardState.value == null && !dashboardState.isLoading) {
+      _triedInitialLoad = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(dashboardControllerProvider.notifier).loadForFarm(activeFarm);
+      });
+    }
+
+    Widget body;
+    if (activeFarm == null) {
+      body = _CenteredMessage(text: s.noFarmsYet);
+    } else if (dashboardState.isLoading) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (dashboardState.hasError) {
+      body = _CenteredMessage(
+        text: dashboardState.error.toString(),
+        actionLabel: s.retry,
+        onAction: () => ref.read(dashboardControllerProvider.notifier).loadForFarm(activeFarm),
+      );
+    } else if (dashboardState.value?.marketForecast == null) {
+      body = _CenteredMessage(text: s.marketForecastUnavailable);
+    } else {
+      body = _MarketForecastBody(section: dashboardState.value!.marketForecast!, s: s);
+    }
+
+    return Scaffold(appBar: AppBar(title: Text(s.marketIntelligenceTitle)), body: SafeArea(child: body));
+  }
+}
+
+class _CenteredMessage extends StatelessWidget {
+  const _CenteredMessage({required this.text, this.actionLabel, this.onAction});
+  final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
+class _MarketForecastBody extends StatelessWidget {
+  const _MarketForecastBody({required this.section, required this.s});
+  final MarketForecastSection section;
+  final AppStrings s;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(s.cropName(section.commodity), style: Theme.of(context).textTheme.titleLarge)),
+                    ConfidenceBadge(score: section.confidence),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(s.predictedPriceRange, style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  '₹${section.nearTermLowInr.round()} – ₹${section.nearTermHighInr.round()} / quintal',
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(s.bestSellingMonth(section.bestSellingMonth), style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(s.nearbyMandis, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        for (final mandi in section.nearbyMandis)
+          _MandiTile(name: mandi.name, distanceKm: mandi.distanceKm, priceInr: mandi.latestPriceInr),
+      ],
+    );
+  }
+}
+
 class _MandiTile extends StatelessWidget {
-  const _MandiTile({required this.name, required this.distance, required this.price});
+  const _MandiTile({required this.name, required this.distanceKm, required this.priceInr});
   final String name;
-  final String distance;
-  final String price;
+  final double distanceKm;
+  final double priceInr;
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +147,8 @@ class _MandiTile extends StatelessWidget {
           child: const Icon(Icons.storefront_rounded, color: AppColors.primary),
         ),
         title: Text(name),
-        subtitle: Text(distance),
-        trailing: Text(price, style: Theme.of(context).textTheme.titleSmall),
+        subtitle: Text('${distanceKm.toStringAsFixed(1)} km'),
+        trailing: Text('₹${priceInr.round()} / quintal', style: Theme.of(context).textTheme.titleSmall),
       ),
     );
   }

@@ -67,6 +67,13 @@ services:
     ports:
       - "8007:8000"
 
+  market_price:
+    build:
+      context: .
+      dockerfile: services/market_price/Dockerfile
+    ports:
+      - "8008:8000"
+
   disease_kb:
     build:
       context: .
@@ -90,6 +97,7 @@ services:
       FARM_REGISTRY_URL: http://farm_registry:8000
       DISEASE_KB_SERVICE_URL: http://disease_kb:8000
       WATER_SERVICE_URL: http://water:8000
+      MARKET_SERVICE_URL: http://market_price:8000
     depends_on:
       - soil
       - weather
@@ -98,6 +106,7 @@ services:
       - farm_registry
       - disease_kb
       - water
+      - market_price
     ports:
       - "8000:8000"
 

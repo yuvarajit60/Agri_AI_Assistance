@@ -195,6 +195,7 @@ abstract class AppStrings {
   String get marketIntelligenceTitle;
   String get predictedPriceRange;
   String get nearbyMandis;
+  String get marketForecastUnavailable;
 
   // Chat
   String get aiAdvisor;
@@ -624,6 +625,9 @@ class _EnStrings implements AppStrings {
   String get predictedPriceRange => 'Predicted price range';
   @override
   String get nearbyMandis => 'Nearby mandis';
+  @override
+  String get marketForecastUnavailable =>
+      "We couldn't get a market forecast yet — this needs a recommended crop from your dashboard first.";
 
   @override
   String get aiAdvisor => 'AI Advisor';
@@ -1168,6 +1172,9 @@ class _TaStrings implements AppStrings {
   String get predictedPriceRange => 'முன்னறிவிக்கப்பட்ட விலை வரம்பு';
   @override
   String get nearbyMandis => 'அருகிலுள்ள மண்டிகள்';
+  @override
+  String get marketForecastUnavailable =>
+      'இன்னும் சந்தை முன்னறிவிப்பைப் பெற முடியவில்லை — இதற்கு முதலில் உங்கள் டாஷ்போர்டில் இருந்து பரிந்துரைக்கப்பட்ட பயிர் தேவை.';
 
   @override
   String get aiAdvisor => 'AI ஆலோசகர்';

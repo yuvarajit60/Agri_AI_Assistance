@@ -76,11 +76,6 @@ class MockDashboardData {
     ),
   ];
 
-  static const marketCommodity = 'Cotton';
-  static const marketPriceRange = '₹6,800 – ₹7,400 / quintal';
-  static const marketBestMonth = 'November';
-  static const marketConfidence = 0.71;
-
   static const disasterRiskLevel = 'Moderate';
   static const disasterRiskType = 'Heavy rain (next 5–7 days)';
   static const disasterConfidence = 0.62;
