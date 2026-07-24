@@ -63,6 +63,7 @@ abstract class AppStrings {
   String get enterYourName;
   String get state;
   String get selectYourState;
+  String get selectYourDistrict;
   String get district;
   String get districtOptional;
   String get districtHint;
@@ -150,6 +151,8 @@ abstract class AppStrings {
   String get india;
   String get cityVillageOptional;
   String get villageHint;
+  String get areaLocalityOptional;
+  String get areaLocalityHint;
   String get findThisLocation;
   String get locationFound;
   String get continueLabel;
@@ -319,6 +322,9 @@ abstract class AppStrings {
   // Crop recommendation names/terms (fixed vocabulary from the crop knowledge base)
   String cropName(String name);
   String cropTerm(String term);
+
+  /// DateTime.weekday (1=Monday..7=Sunday) -> short display label.
+  String weekdayName(int weekday);
 }
 
 final appStringsProvider = Provider<AppStrings>((ref) {
@@ -413,6 +419,8 @@ class _EnStrings implements AppStrings {
   String get state => 'State';
   @override
   String get selectYourState => 'Select your state';
+  @override
+  String get selectYourDistrict => 'Select your district';
   @override
   String get district => 'District';
   @override
@@ -572,6 +580,10 @@ class _EnStrings implements AppStrings {
   String get cityVillageOptional => 'City / Village (optional)';
   @override
   String get villageHint => 'e.g. Wadgaon';
+  @override
+  String get areaLocalityOptional => 'Area / Locality (optional)';
+  @override
+  String get areaLocalityHint => 'e.g. Vangalam Valasu';
   @override
   String get findThisLocation => 'Find this location';
   @override
@@ -929,6 +941,17 @@ class _EnStrings implements AppStrings {
         'long-term' => 'Long-term',
         _ => term,
       };
+
+  @override
+  String weekdayName(int weekday) => switch (weekday) {
+        1 => 'Mon',
+        2 => 'Tue',
+        3 => 'Wed',
+        4 => 'Thu',
+        5 => 'Fri',
+        6 => 'Sat',
+        _ => 'Sun',
+      };
 }
 
 class _TaStrings implements AppStrings {
@@ -1017,6 +1040,8 @@ class _TaStrings implements AppStrings {
   String get state => 'மாநிலம்';
   @override
   String get selectYourState => 'உங்கள் மாநிலத்தைத் தேர்ந்தெடுக்கவும்';
+  @override
+  String get selectYourDistrict => 'உங்கள் மாவட்டத்தைத் தேர்ந்தெடுக்கவும்';
   @override
   String get district => 'மாவட்டம்';
   @override
@@ -1177,6 +1202,10 @@ class _TaStrings implements AppStrings {
   String get cityVillageOptional => 'நகரம் / கிராமம் (விருப்பம்)';
   @override
   String get villageHint => 'உதா. வட்காவ்';
+  @override
+  String get areaLocalityOptional => 'பகுதி / இடம் (விருப்பம்)';
+  @override
+  String get areaLocalityHint => 'உதா. வங்காளம் வளசு';
   @override
   String get findThisLocation => 'இந்த இருப்பிடத்தைக் கண்டறியவும்';
   @override
@@ -1556,4 +1585,15 @@ class _TaStrings implements AppStrings {
   String get irrigationScheduleTitle => 'பாசன அட்டவணை';
   @override
   String dayOffsetLabel(int days) => '$days-ஆம் நாள்';
+
+  @override
+  String weekdayName(int weekday) => switch (weekday) {
+        1 => 'திங்கள்',
+        2 => 'செவ்வாய்',
+        3 => 'புதன்',
+        4 => 'வியாழன்',
+        5 => 'வெள்ளி',
+        6 => 'சனி',
+        _ => 'ஞாயிறு',
+      };
 }

@@ -66,7 +66,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/otp', builder: (context, state) => const OtpScreen()),
       GoRoute(path: '/profile-setup', builder: (context, state) => const ProfileSetupScreen()),
-      GoRoute(path: '/weather', builder: (context, state) => const WeatherScreen()),
+      GoRoute(
+        path: '/weather',
+        builder: (context, state) => WeatherScreen(section: state.extra as WeatherSection),
+      ),
       GoRoute(path: '/diagnose', builder: (context, state) => const DiagnoseScreen()),
       GoRoute(
         path: '/water',

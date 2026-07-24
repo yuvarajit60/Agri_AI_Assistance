@@ -399,7 +399,7 @@ class _WeatherCard extends StatelessWidget {
       title: s.weather7Day,
       icon: Icons.wb_sunny_outlined,
       trailing: ConfidenceBadge(score: section.confidence, compact: true),
-      onTap: () => context.push('/weather'),
+      onTap: () => context.push('/weather', extra: section),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

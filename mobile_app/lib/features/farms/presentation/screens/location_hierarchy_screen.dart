@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/india_districts.dart';
 import '../../../../core/utils/india_states.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../data/geocoding_repository.dart';
@@ -24,8 +25,12 @@ class _LocationHierarchyScreenState extends ConsumerState<LocationHierarchyScree
 
   final String _country = 'India';
   String? _state;
+  // Only used when kDistrictsByState has no curated list for _state.
   final _districtController = TextEditingController();
+  // Only used when kDistrictsByState does have a curated list for _state.
+  String? _selectedDistrict;
   final _villageController = TextEditingController();
+  final _areaController = TextEditingController();
 
   bool _searching = false;
   String? _error;
@@ -35,10 +40,15 @@ class _LocationHierarchyScreenState extends ConsumerState<LocationHierarchyScree
   void dispose() {
     _districtController.dispose();
     _villageController.dispose();
+    _areaController.dispose();
     super.dispose();
   }
 
-  bool get _canSearch => _state != null && _districtController.text.trim().isNotEmpty;
+  List<String>? get _curatedDistricts => kDistrictsByState[_state];
+
+  String get _district => _curatedDistricts != null ? (_selectedDistrict ?? '') : _districtController.text.trim();
+
+  bool get _canSearch => _state != null && _district.isNotEmpty;
 
   Future<void> _search() async {
     if (!_canSearch) return;
@@ -48,9 +58,16 @@ class _LocationHierarchyScreenState extends ConsumerState<LocationHierarchyScree
       _resolved = null;
     });
 
+    final area = _areaController.text.trim();
     final village = _villageController.text.trim();
-    final district = _districtController.text.trim();
-    final query = [if (village.isNotEmpty) village, district, _state, _country].join(', ');
+    final district = _district;
+    final query = [
+      if (area.isNotEmpty) area,
+      if (village.isNotEmpty) village,
+      district,
+      _state,
+      _country,
+    ].join(', ');
     final s = ref.read(appStringsProvider);
 
     try {
@@ -79,13 +96,15 @@ class _LocationHierarchyScreenState extends ConsumerState<LocationHierarchyScree
   void _confirm() {
     final resolved = _resolved;
     if (resolved == null) return;
+    final area = _areaController.text.trim();
     final village = _villageController.text.trim();
+    final suggestedName = area.isNotEmpty ? area : (village.isNotEmpty ? village : _district);
     showConfirmFarmSheet(
       context: context,
       latitude: resolved.latitude,
       longitude: resolved.longitude,
       resolutionMethod: 'location_search',
-      suggestedName: village.isNotEmpty ? village : (_districtController.text.trim()),
+      suggestedName: suggestedName,
       locationLabel: resolved.displayName,
     );
   }
@@ -115,6 +134,8 @@ class _LocationHierarchyScreenState extends ConsumerState<LocationHierarchyScree
             items: kIndianStates.map((st) => DropdownMenuItem(value: st, child: Text(st))).toList(),
             onChanged: (v) => setState(() {
               _state = v;
+              _selectedDistrict = null;
+              _districtController.clear();
               _resolved = null;
             }),
           ),
@@ -129,17 +150,37 @@ class _LocationHierarchyScreenState extends ConsumerState<LocationHierarchyScree
                 children: [
                   Text(s.district, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: _districtController,
-                    decoration: InputDecoration(hintText: s.districtHint),
-                    onChanged: (_) => setState(() => _resolved = null),
-                  ),
+                  if (_curatedDistricts != null)
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedDistrict,
+                      isExpanded: true,
+                      hint: Text(s.selectYourDistrict),
+                      items: _curatedDistricts!.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+                      onChanged: (v) => setState(() {
+                        _selectedDistrict = v;
+                        _resolved = null;
+                      }),
+                    )
+                  else
+                    TextField(
+                      controller: _districtController,
+                      decoration: InputDecoration(hintText: s.districtHint),
+                      onChanged: (_) => setState(() => _resolved = null),
+                    ),
                   const SizedBox(height: 18),
                   Text(s.cityVillageOptional, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _villageController,
                     decoration: InputDecoration(hintText: s.villageHint),
+                    onChanged: (_) => setState(() => _resolved = null),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(s.areaLocalityOptional, style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _areaController,
+                    decoration: InputDecoration(hintText: s.areaLocalityHint),
                     onChanged: (_) => setState(() => _resolved = null),
                   ),
                 ],

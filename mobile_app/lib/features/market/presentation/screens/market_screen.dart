@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/localization/language_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/confidence_badge.dart';
+import '../../../dashboard/data/dashboard_data.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../farms/presentation/providers/farm_provider.dart';
 import '../../data/market_models.dart';
+import '../../data/market_repository.dart';
 
-/// A bottom-nav tab (see app_router.dart), so unlike /water this screen
-/// can be reached without any `extra` payload -- it reads the same
-/// dashboardControllerProvider the dashboard tab already populated
-/// (services/gateway/app/main.py's /dashboard now resolves market_forecast
-/// as part of the same fan-out), rather than re-fetching independently.
+/// A bottom-nav tab (see app_router.dart). The dashboard's own /dashboard
+/// call already resolves a forecast for the top recommended crop for
+/// free, so that's shown by default with no extra request; picking a
+/// different recommended crop fetches its forecast on demand via
+/// MarketRepository instead of the gateway forecasting every recommended
+/// crop on every dashboard load (market_price is the heaviest service in
+/// the platform — see docs/architecture/ROADMAP.md).
 class MarketScreen extends ConsumerStatefulWidget {
   const MarketScreen({super.key});
 
@@ -21,6 +26,30 @@ class MarketScreen extends ConsumerStatefulWidget {
 
 class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _triedInitialLoad = false;
+  final _repository = MarketRepository();
+
+  String? _selectedCropName;
+  AsyncValue<MarketForecastSection>? _selectedForecast;
+
+  Future<void> _selectCrop(String cropName, double lat, double lon) async {
+    setState(() {
+      _selectedCropName = cropName;
+      _selectedForecast = const AsyncValue.loading();
+    });
+    try {
+      final forecast = await _repository.fetchForecast(
+        commodity: cropName,
+        latitude: lat,
+        longitude: lon,
+        language: ref.read(languageProvider),
+      );
+      if (!mounted) return;
+      setState(() => _selectedForecast = AsyncValue.data(forecast));
+    } catch (e, st) {
+      if (!mounted) return;
+      setState(() => _selectedForecast = AsyncValue.error(e, st));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +78,66 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     } else if (dashboardState.value?.marketForecast == null) {
       body = _CenteredMessage(text: s.marketForecastUnavailable);
     } else {
-      body = _MarketForecastBody(section: dashboardState.value!.marketForecast!, s: s);
+      final crops = dashboardState.value!.cropRecommendation;
+      final topCropName = crops?.top.cropName;
+      final isViewingTop = _selectedCropName == null || _selectedCropName == topCropName;
+      final currentForecast = isViewingTop ? AsyncValue.data(dashboardState.value!.marketForecast!) : _selectedForecast;
+
+      body = Column(
+        children: [
+          if (crops != null && (crops.alternatives.isNotEmpty))
+            _CropSelector(
+              crops: [crops.top, ...crops.alternatives],
+              selectedCropName: _selectedCropName ?? topCropName,
+              s: s,
+              onSelect: (cropName) => _selectCrop(cropName, activeFarm.latitude, activeFarm.longitude),
+            ),
+          Expanded(
+            child: switch (currentForecast) {
+              AsyncData(:final value) => _MarketForecastBody(section: value, s: s),
+              AsyncError(:final error) => _CenteredMessage(
+                  text: error.toString(),
+                  actionLabel: s.retry,
+                  onAction: () => _selectCrop(_selectedCropName!, activeFarm.latitude, activeFarm.longitude),
+                ),
+              _ => const Center(child: CircularProgressIndicator()),
+            },
+          ),
+        ],
+      );
     }
 
     return Scaffold(appBar: AppBar(title: Text(s.marketIntelligenceTitle)), body: SafeArea(child: body));
+  }
+}
+
+class _CropSelector extends StatelessWidget {
+  const _CropSelector({required this.crops, required this.selectedCropName, required this.s, required this.onSelect});
+  final List<CropRecommendation> crops;
+  final String? selectedCropName;
+  final AppStrings s;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        scrollDirection: Axis.horizontal,
+        itemCount: crops.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final crop = crops[i];
+          final selected = crop.cropName == selectedCropName;
+          return ChoiceChip(
+            label: Text(s.cropName(crop.cropName)),
+            selected: selected,
+            onSelected: (_) => onSelect(crop.cropName),
+          );
+        },
+      ),
+    );
   }
 }
 
