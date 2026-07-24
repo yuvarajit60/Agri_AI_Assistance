@@ -19,6 +19,8 @@ from .config import (
     CROP_SERVICE_URL,
     DISEASE_KB_SERVICE_URL,
     FARM_REGISTRY_URL,
+    FERTILIZER_SERVICE_URL,
+    IRRIGATION_SERVICE_URL,
     MARKET_SERVICE_URL,
     REQUEST_TIMEOUT_SECONDS,
     SOIL_SERVICE_URL,
@@ -76,6 +78,12 @@ async def _post(client: httpx.AsyncClient, url: str, json: dict[str, Any]) -> di
         return resp.json()
     except (httpx.HTTPError, ValueError):
         return None
+
+
+async def _none() -> None:
+    """A no-op coroutine so a conditionally-skipped call can still sit in
+    an asyncio.gather() alongside the calls that do run."""
+    return None
 
 
 @app.get("/dashboard")
@@ -150,24 +158,70 @@ async def dashboard(
         else:
             warnings.append("Skipped crop recommendations — requires both soil and weather data.")
 
-        # Market forecast needs the top recommended crop's name, which only
-        # exists once crop_recommendations has resolved above — this is a
-        # genuine sequential dependency, unlike soil/weather/water which
-        # gather() in parallel with no such ordering constraint.
+        # Market forecast, fertilizer, and irrigation all need the top
+        # recommended crop's name, which only exists once
+        # crop_recommendations has resolved above — a genuine sequential
+        # dependency, unlike soil/weather/water which gather() in parallel
+        # with no such ordering constraint. The three of them have no
+        # dependency on each other, so they gather() together.
         market_forecast = None
+        fertilizer_recommendation = None
+        irrigation_plan = None
         top_crop_name = (
             crop_recommendations["result"]["crop_name"] if crop_recommendations is not None else None
         )
         if top_crop_name and top_crop_name != "No suitable crop found":
-            market_forecast = await _post(
+            market_task = _post(
                 client,
                 f"{MARKET_SERVICE_URL}/market/price-forecast",
                 {"commodity": top_crop_name, "lat": lat, "lon": lon, "language": language},
             )
+            fertilizer_task = (
+                _post(
+                    client,
+                    f"{FERTILIZER_SERVICE_URL}/fertilizer/recommend",
+                    {
+                        "crop_name": top_crop_name,
+                        "farm_area_acres": area_acres,
+                        "soil_nitrogen_kg_per_ha": soil["result"]["nitrogen_kg_per_ha"],
+                        "soil_phosphorus_kg_per_ha": soil["result"]["phosphorus_kg_per_ha"],
+                        "soil_potassium_kg_per_ha": soil["result"]["potassium_kg_per_ha"],
+                        "soil_ph": soil["result"]["ph"],
+                        "organic_carbon_percent": soil["result"]["organic_carbon_percent"],
+                        "soil_confidence": soil["confidence_score"],
+                        "language": language,
+                    },
+                )
+                if soil is not None
+                else _none()
+            )
+            irrigation_task = _post(
+                client,
+                f"{IRRIGATION_SERVICE_URL}/irrigation/plan",
+                {
+                    "crop_name": top_crop_name,
+                    "crop_water_requirement_mm": crop_recommendations["result"]["water_requirement_mm"],
+                    "crop_duration_days": crop_recommendations["result"]["time_to_harvest_days"],
+                    "farm_area_acres": area_acres,
+                    "irrigation_method": water["result"]["irrigation_feasibility"]["method"] if water else None,
+                    "soil_moisture_percent": soil["result"]["moisture_percent"] if soil else None,
+                    "language": language,
+                },
+            )
+            market_forecast, fertilizer_recommendation, irrigation_plan = await asyncio.gather(
+                market_task, fertilizer_task, irrigation_task
+            )
+
             if market_forecast is None:
                 warnings.append("Market price service unavailable.")
+            if soil is None:
+                warnings.append("Skipped fertilizer recommendation — requires soil data.")
+            elif fertilizer_recommendation is None:
+                warnings.append("Fertilizer recommendation service unavailable.")
+            if irrigation_plan is None:
+                warnings.append("Irrigation planning service unavailable.")
         else:
-            warnings.append("Skipped market forecast — no recommended crop to forecast for.")
+            warnings.append("Skipped market forecast, fertilizer recommendation, and irrigation planning — no recommended crop.")
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -177,6 +231,8 @@ async def dashboard(
         "water_resources": water,
         "crop_recommendations": crop_recommendations,
         "market_forecast": market_forecast,
+        "fertilizer_recommendation": fertilizer_recommendation,
+        "irrigation_plan": irrigation_plan,
         "warnings": warnings,
     }
 
@@ -262,6 +318,22 @@ async def proxy_water_analyze(
 @app.post("/market/price-forecast")
 async def proxy_market_price_forecast(payload: dict[str, Any]) -> Response:
     return await _proxy("POST", "/market/price-forecast", json=payload, base_url=MARKET_SERVICE_URL)
+
+
+# --- Fertilizer Recommendation proxy -------------------------------------
+
+
+@app.post("/fertilizer/recommend")
+async def proxy_fertilizer_recommend(payload: dict[str, Any]) -> Response:
+    return await _proxy("POST", "/fertilizer/recommend", json=payload, base_url=FERTILIZER_SERVICE_URL)
+
+
+# --- Irrigation Planning proxy --------------------------------------------
+
+
+@app.post("/irrigation/plan")
+async def proxy_irrigation_plan(payload: dict[str, Any]) -> Response:
+    return await _proxy("POST", "/irrigation/plan", json=payload, base_url=IRRIGATION_SERVICE_URL)
 
 
 # --- Disease Organic Knowledge Base (RAG) proxy -------------------------

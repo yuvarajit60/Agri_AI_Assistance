@@ -83,6 +83,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _CropRecommendationsLive(section: dashboardState.value!.cropRecommendation!, s: s),
                         const SizedBox(height: 14),
                       ],
+                      if (dashboardState.value!.fertilizerRecommendation != null) ...[
+                        _FertilizerCard(section: dashboardState.value!.fertilizerRecommendation!, s: s),
+                        const SizedBox(height: 14),
+                      ],
+                      if (dashboardState.value!.irrigationPlan != null) ...[
+                        _IrrigationCard(section: dashboardState.value!.irrigationPlan!, s: s),
+                        const SizedBox(height: 14),
+                      ],
                       if (dashboardState.value!.marketForecast != null) ...[
                         _MarketForecastCard(section: dashboardState.value!.marketForecast!, s: s),
                         const SizedBox(height: 14),
@@ -493,6 +501,75 @@ class _WaterResourceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FertilizerCard extends StatelessWidget {
+  const _FertilizerCard({required this.section, required this.s});
+  final FertilizerRecommendationSection section;
+  final AppStrings s;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSectionCard(
+      title: s.fertilizerRecommendationTitle,
+      icon: Icons.grain_rounded,
+      trailing: ConfidenceBadge(score: section.confidence, compact: true),
+      onTap: () => context.push('/fertilizer', extra: section),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (section.products.isEmpty)
+            Text(s.noFertilizerNeeded, style: Theme.of(context).textTheme.bodyMedium)
+          else
+            Text(
+              section.products.map((p) => '${p.quantityKgTotal.toStringAsFixed(0)} kg ${p.product}').join(' · '),
+              style: Theme.of(context).textTheme.headlineMedium,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (section.phCorrection != null) ...[
+            const SizedBox(height: 6),
+            Text(s.phCorrectionNeeded, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _IrrigationCard extends StatelessWidget {
+  const _IrrigationCard({required this.section, required this.s});
+  final IrrigationPlanSection section;
+  final AppStrings s;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSectionCard(
+      title: s.irrigationPlanTitle,
+      icon: Icons.water_drop_rounded,
+      trailing: ConfidenceBadge(score: section.confidence, compact: true),
+      onTap: () => context.push('/irrigation', extra: section),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            s.irrigationEveryNDays(section.frequencyDays, s.irrigationMethod(section.method)),
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            s.irrigationVolumePerTurn(_formatLiters(section.perIrrigationVolumeLiters)),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatLiters(double liters) {
+  if (liters >= 1000) return '${(liters / 1000).toStringAsFixed(1)}k';
+  return liters.toStringAsFixed(0);
 }
 
 class _MarketForecastCard extends StatelessWidget {

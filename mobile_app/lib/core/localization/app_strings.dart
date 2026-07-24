@@ -289,6 +289,33 @@ abstract class AppStrings {
   String groundwaterCategory(String value);
   String irrigationMethod(String value);
 
+  // Fertilizer Recommendation
+  String get fertilizerRecommendationTitle;
+  String get noFertilizerNeeded;
+  String get phCorrectionNeeded;
+  String cropNotInReferenceList(String cropName);
+  String get nutrientGapTitle;
+  String get nitrogenLabel;
+  String get phosphorusLabel;
+  String get potassiumLabel;
+  String get recommendedProductsTitle;
+  String get applicationScheduleTitle;
+  String fertilizerStage(String token);
+  String fertilizerTiming(String token);
+  String get phCorrectionTitle;
+  String get organicMatterTitle;
+
+  // Irrigation Planning
+  String get irrigationPlanTitle;
+  String irrigationEveryNDays(int days, String method);
+  String irrigationVolumePerTurn(String liters);
+  String get irrigationMethodAssumedNotice;
+  String applicationEfficiency(int percent);
+  String get totalWaterNeeded;
+  String get numberOfIrrigations;
+  String get irrigationScheduleTitle;
+  String dayOffsetLabel(int days);
+
   // Crop recommendation names/terms (fixed vocabulary from the crop knowledge base)
   String cropName(String name);
   String cropTerm(String term);
@@ -834,6 +861,64 @@ class _EnStrings implements AppStrings {
         'limited' => 'Limited',
         _ => value,
       };
+
+  @override
+  String get fertilizerRecommendationTitle => 'Fertilizer Recommendation';
+  @override
+  String get noFertilizerNeeded => 'Your soil already meets this crop\'s estimated nutrient requirement.';
+  @override
+  String get phCorrectionNeeded => 'Soil pH correction also recommended — see details.';
+  @override
+  String cropNotInReferenceList(String cropName) =>
+      '$cropName isn\'t in our detailed crop reference list, so a general estimate was used instead — less precise than for a matched crop.';
+  @override
+  String get nutrientGapTitle => 'Nutrient Gap (per hectare)';
+  @override
+  String get nitrogenLabel => 'Nitrogen (N)';
+  @override
+  String get phosphorusLabel => 'Phosphorus (P2O5)';
+  @override
+  String get potassiumLabel => 'Potassium (K2O)';
+  @override
+  String get recommendedProductsTitle => 'Recommended Products';
+  @override
+  String get applicationScheduleTitle => 'Application Schedule';
+  @override
+  String fertilizerStage(String token) => switch (token) {
+        'basal' => 'Basal dose',
+        'top_dressing_1' => 'Top dressing',
+        _ => token,
+      };
+  @override
+  String fertilizerTiming(String token) => switch (token) {
+        'at_sowing' => 'At sowing/transplanting',
+        'vegetative_stage' => '3-4 weeks after sowing',
+        _ => '',
+      };
+  @override
+  String get phCorrectionTitle => 'Soil pH Correction';
+  @override
+  String get organicMatterTitle => 'Organic Matter';
+
+  @override
+  String get irrigationPlanTitle => 'Irrigation Plan';
+  @override
+  String irrigationEveryNDays(int days, String method) => 'Every $days days · $method';
+  @override
+  String irrigationVolumePerTurn(String liters) => '$liters liters per irrigation';
+  @override
+  String get irrigationMethodAssumedNotice =>
+      'No irrigation source was found, so a conservative "limited water" plan was assumed — connect a water source in Water Resources for a more accurate plan.';
+  @override
+  String applicationEfficiency(int percent) => '$percent% application efficiency';
+  @override
+  String get totalWaterNeeded => 'Total water needed';
+  @override
+  String get numberOfIrrigations => 'Number of irrigations';
+  @override
+  String get irrigationScheduleTitle => 'Irrigation Schedule';
+  @override
+  String dayOffsetLabel(int days) => 'Day $days';
 
   @override
   String cropName(String name) => name;
@@ -1411,4 +1496,64 @@ class _TaStrings implements AppStrings {
         'long-term' => 'நீண்ட காலம்',
         _ => term,
       };
+
+  @override
+  String get fertilizerRecommendationTitle => 'உர பரிந்துரை';
+  @override
+  String get noFertilizerNeeded => 'உங்கள் மண் ஏற்கனவே இந்த பயிரின் மதிப்பிடப்பட்ட ஊட்டச்சத்து தேவையை பூர்த்தி செய்கிறது.';
+  @override
+  String get phCorrectionNeeded => 'மண் pH திருத்தமும் பரிந்துரைக்கப்படுகிறது — விவரங்களைப் பார்க்கவும்.';
+  @override
+  String cropNotInReferenceList(String cropName) =>
+      '$cropName எங்கள் விரிவான பயிர் பட்டியலில் இல்லை, எனவே ஒரு பொதுவான மதிப்பீடு பயன்படுத்தப்பட்டது — பொருந்திய '
+      'பயிரை விட குறைவான துல்லியம்.';
+  @override
+  String get nutrientGapTitle => 'ஊட்டச்சத்து இடைவெளி (ஒரு ஹெக்டேருக்கு)';
+  @override
+  String get nitrogenLabel => 'நைட்ரஜன் (N)';
+  @override
+  String get phosphorusLabel => 'பாஸ்பரஸ் (P2O5)';
+  @override
+  String get potassiumLabel => 'பொட்டாசியம் (K2O)';
+  @override
+  String get recommendedProductsTitle => 'பரிந்துரைக்கப்பட்ட உரங்கள்';
+  @override
+  String get applicationScheduleTitle => 'பயன்பாட்டு அட்டவணை';
+  @override
+  String fertilizerStage(String token) => switch (token) {
+        'basal' => 'அடிப்படை அளவு',
+        'top_dressing_1' => 'மேல்-உரமிடல்',
+        _ => token,
+      };
+  @override
+  String fertilizerTiming(String token) => switch (token) {
+        'at_sowing' => 'விதைப்பு/நடவு நேரத்தில்',
+        'vegetative_stage' => 'விதைத்த 3-4 வாரங்களுக்குப் பிறகு',
+        _ => '',
+      };
+  @override
+  String get phCorrectionTitle => 'மண் pH திருத்தம்';
+  @override
+  String get organicMatterTitle => 'இயற்கை கார்பன்';
+
+  @override
+  String get irrigationPlanTitle => 'பாசன திட்டம்';
+  @override
+  String irrigationEveryNDays(int days, String method) => 'ஒவ்வொரு $days நாட்களுக்கும் · $method';
+  @override
+  String irrigationVolumePerTurn(String liters) => 'ஒரு பாசனத்திற்கு $liters லிட்டர்';
+  @override
+  String get irrigationMethodAssumedNotice =>
+      'நீர் ஆதாரம் எதுவும் கிடைக்கவில்லை, எனவே பாதுகாப்பான "மட்டுப்படுத்தப்பட்ட நீர்" திட்டம் கருதப்பட்டது — மிகவும் '
+      'துல்லியமான திட்டத்திற்கு நீர் வளங்களில் ஒரு நீர் ஆதாரத்தை இணைக்கவும்.';
+  @override
+  String applicationEfficiency(int percent) => '$percent% பயன்பாட்டு திறன்';
+  @override
+  String get totalWaterNeeded => 'மொத்த நீர் தேவை';
+  @override
+  String get numberOfIrrigations => 'பாசனங்களின் எண்ணிக்கை';
+  @override
+  String get irrigationScheduleTitle => 'பாசன அட்டவணை';
+  @override
+  String dayOffsetLabel(int days) => '$days-ஆம் நாள்';
 }

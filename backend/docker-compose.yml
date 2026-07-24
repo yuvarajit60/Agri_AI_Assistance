@@ -74,6 +74,20 @@ services:
     ports:
       - "8008:8000"
 
+  fertilizer:
+    build:
+      context: .
+      dockerfile: services/fertilizer/Dockerfile
+    ports:
+      - "8009:8000"
+
+  irrigation:
+    build:
+      context: .
+      dockerfile: services/irrigation/Dockerfile
+    ports:
+      - "8010:8000"
+
   disease_kb:
     build:
       context: .
@@ -98,6 +112,8 @@ services:
       DISEASE_KB_SERVICE_URL: http://disease_kb:8000
       WATER_SERVICE_URL: http://water:8000
       MARKET_SERVICE_URL: http://market_price:8000
+      FERTILIZER_SERVICE_URL: http://fertilizer:8000
+      IRRIGATION_SERVICE_URL: http://irrigation:8000
     depends_on:
       - soil
       - weather
@@ -107,6 +123,8 @@ services:
       - disease_kb
       - water
       - market_price
+      - fertilizer
+      - irrigation
     ports:
       - "8000:8000"
 

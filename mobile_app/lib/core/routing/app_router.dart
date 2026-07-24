@@ -17,6 +17,8 @@ import '../../features/farms/presentation/screens/location_hierarchy_screen.dart
 import '../../features/market/presentation/screens/market_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/dashboard/data/dashboard_data.dart';
+import '../../features/fertilizer/presentation/screens/fertilizer_screen.dart';
+import '../../features/irrigation/presentation/screens/irrigation_screen.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/water/presentation/screens/water_resource_screen.dart';
 import '../../features/weather/presentation/screens/weather_screen.dart';
@@ -69,6 +71,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/water',
         builder: (context, state) => WaterResourceScreen(section: state.extra as WaterResourceSection),
+      ),
+      GoRoute(
+        path: '/fertilizer',
+        builder: (context, state) => FertilizerScreen(section: state.extra as FertilizerRecommendationSection),
+      ),
+      GoRoute(
+        path: '/irrigation',
+        builder: (context, state) => IrrigationScreen(section: state.extra as IrrigationPlanSection),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),

@@ -17,6 +17,8 @@ FARM_REGISTRY_URL = _service_url("FARM_REGISTRY_URL", 8005)
 DISEASE_KB_SERVICE_URL = _service_url("DISEASE_KB_SERVICE_URL", 8006)
 WATER_SERVICE_URL = _service_url("WATER_SERVICE_URL", 8007)
 MARKET_SERVICE_URL = _service_url("MARKET_SERVICE_URL", 8008)
+FERTILIZER_SERVICE_URL = _service_url("FERTILIZER_SERVICE_URL", 8009)
+IRRIGATION_SERVICE_URL = _service_url("IRRIGATION_SERVICE_URL", 8010)
 
 # Free-tier Render services spin down after ~15 min idle and take 12-22s
 # to wake on the next request (observed directly) — a 10s upstream timeout

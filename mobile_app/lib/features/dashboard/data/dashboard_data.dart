@@ -12,6 +12,8 @@ class DashboardData {
     this.waterResources,
     this.cropRecommendation,
     this.marketForecast,
+    this.fertilizerRecommendation,
+    this.irrigationPlan,
     this.warnings = const [],
   });
 
@@ -21,6 +23,8 @@ class DashboardData {
   final WaterResourceSection? waterResources;
   final CropRecommendationSection? cropRecommendation;
   final MarketForecastSection? marketForecast;
+  final FertilizerRecommendationSection? fertilizerRecommendation;
+  final IrrigationPlanSection? irrigationPlan;
   final List<String> warnings;
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -38,6 +42,12 @@ class DashboardData {
           : null,
       marketForecast: json['market_forecast'] != null
           ? MarketForecastSection.fromJson(json['market_forecast'] as Map<String, dynamic>)
+          : null,
+      fertilizerRecommendation: json['fertilizer_recommendation'] != null
+          ? FertilizerRecommendationSection.fromJson(json['fertilizer_recommendation'] as Map<String, dynamic>)
+          : null,
+      irrigationPlan: json['irrigation_plan'] != null
+          ? IrrigationPlanSection.fromJson(json['irrigation_plan'] as Map<String, dynamic>)
           : null,
       warnings: (json['warnings'] as List?)?.cast<String>() ?? const [],
     );
@@ -213,5 +223,145 @@ class WaterFeature {
         distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0,
         seasonalAvailability: json['seasonal_availability'] as String? ?? 'seasonal',
         estimatedWaterAvailability: json['estimated_water_availability'] as String? ?? 'moderate',
+      );
+}
+
+/// Mirrors the gateway's `/fertilizer/recommend` response, shaped by
+/// backend/services/fertilizer/app/schemas.py's FertilizerRecommendationResult
+/// wrapped in the RecommendationEnvelope contract.
+class FertilizerRecommendationSection {
+  const FertilizerRecommendationSection({
+    required this.cropName,
+    required this.cropReferenceMatched,
+    required this.nitrogenGapKgPerHa,
+    required this.phosphorusGapKgPerHa,
+    required this.potassiumGapKgPerHa,
+    required this.products,
+    required this.phCorrection,
+    required this.organicMatterNote,
+    required this.applicationSchedule,
+    required this.confidence,
+  });
+
+  final String cropName;
+  final bool cropReferenceMatched;
+  final double nitrogenGapKgPerHa;
+  final double phosphorusGapKgPerHa;
+  final double potassiumGapKgPerHa;
+  final List<FertilizerProduct> products;
+  final String? phCorrection;
+  final String? organicMatterNote;
+  final List<FertilizerApplicationStage> applicationSchedule;
+  final double confidence;
+
+  factory FertilizerRecommendationSection.fromJson(Map<String, dynamic> json) {
+    final result = json['result'] as Map<String, dynamic>? ?? {};
+    final gap = result['nutrient_gap_per_ha'] as Map<String, dynamic>? ?? {};
+    final productsRaw = (result['products'] as List?) ?? const [];
+    final scheduleRaw = (result['application_schedule'] as List?) ?? const [];
+    return FertilizerRecommendationSection(
+      cropName: result['crop_name'] as String? ?? '',
+      cropReferenceMatched: result['crop_reference_matched'] as bool? ?? true,
+      nitrogenGapKgPerHa: (gap['nitrogen_kg_per_ha'] as num?)?.toDouble() ?? 0,
+      phosphorusGapKgPerHa: (gap['phosphorus_p2o5_kg_per_ha'] as num?)?.toDouble() ?? 0,
+      potassiumGapKgPerHa: (gap['potassium_k2o_kg_per_ha'] as num?)?.toDouble() ?? 0,
+      products: productsRaw.map((p) => FertilizerProduct.fromJson(p as Map<String, dynamic>)).toList(),
+      phCorrection: result['ph_correction'] as String?,
+      organicMatterNote: result['organic_matter_note'] as String?,
+      applicationSchedule:
+          scheduleRaw.map((s) => FertilizerApplicationStage.fromJson(s as Map<String, dynamic>)).toList(),
+      confidence: (json['confidence_score'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class FertilizerProduct {
+  const FertilizerProduct({required this.product, required this.nutrientSupplied, required this.quantityKgTotal});
+  final String product;
+  final String nutrientSupplied;
+  final double quantityKgTotal;
+
+  factory FertilizerProduct.fromJson(Map<String, dynamic> json) => FertilizerProduct(
+        product: json['product'] as String? ?? '',
+        nutrientSupplied: json['nutrient_supplied'] as String? ?? '',
+        quantityKgTotal: (json['quantity_kg_total'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+class FertilizerApplicationStage {
+  const FertilizerApplicationStage({required this.stage, required this.timing, required this.products});
+  final String stage;
+  final String timing;
+  final List<String> products;
+
+  factory FertilizerApplicationStage.fromJson(Map<String, dynamic> json) => FertilizerApplicationStage(
+        stage: json['stage'] as String? ?? 'none_needed',
+        timing: json['timing'] as String? ?? 'none',
+        products: (json['products'] as List?)?.cast<String>() ?? const [],
+      );
+}
+
+/// Mirrors the gateway's `/irrigation/plan` response, shaped by
+/// backend/services/irrigation/app/schemas.py's IrrigationPlanResult
+/// wrapped in the RecommendationEnvelope contract.
+class IrrigationPlanSection {
+  const IrrigationPlanSection({
+    required this.cropName,
+    required this.method,
+    required this.methodAssumed,
+    required this.applicationEfficiencyPercent,
+    required this.totalWaterRequirementLiters,
+    required this.numberOfIrrigations,
+    required this.frequencyDays,
+    required this.perIrrigationVolumeLiters,
+    required this.methodNotes,
+    required this.criticalStageAlert,
+    required this.schedule,
+    required this.confidence,
+  });
+
+  final String cropName;
+  final String method;
+  final bool methodAssumed;
+  final int applicationEfficiencyPercent;
+  final double totalWaterRequirementLiters;
+  final int numberOfIrrigations;
+  final int frequencyDays;
+  final double perIrrigationVolumeLiters;
+  final String methodNotes;
+  final String criticalStageAlert;
+  final List<IrrigationScheduleEntry> schedule;
+  final double confidence;
+
+  factory IrrigationPlanSection.fromJson(Map<String, dynamic> json) {
+    final result = json['result'] as Map<String, dynamic>? ?? {};
+    final scheduleRaw = (result['schedule'] as List?) ?? const [];
+    return IrrigationPlanSection(
+      cropName: result['crop_name'] as String? ?? '',
+      method: result['method'] as String? ?? 'limited',
+      methodAssumed: result['method_assumed'] as bool? ?? true,
+      applicationEfficiencyPercent: (result['application_efficiency_percent'] as num?)?.toInt() ?? 0,
+      totalWaterRequirementLiters: (result['total_water_requirement_liters'] as num?)?.toDouble() ?? 0,
+      numberOfIrrigations: (result['number_of_irrigations'] as num?)?.toInt() ?? 0,
+      frequencyDays: (result['frequency_days'] as num?)?.toInt() ?? 0,
+      perIrrigationVolumeLiters: (result['per_irrigation_volume_liters'] as num?)?.toDouble() ?? 0,
+      methodNotes: result['method_notes'] as String? ?? '',
+      criticalStageAlert: result['critical_stage_alert'] as String? ?? '',
+      schedule: scheduleRaw.map((e) => IrrigationScheduleEntry.fromJson(e as Map<String, dynamic>)).toList(),
+      confidence: (json['confidence_score'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class IrrigationScheduleEntry {
+  const IrrigationScheduleEntry({required this.irrigationNumber, required this.dayOffset, required this.volumeLiters});
+  final int irrigationNumber;
+  final int dayOffset;
+  final double volumeLiters;
+
+  factory IrrigationScheduleEntry.fromJson(Map<String, dynamic> json) => IrrigationScheduleEntry(
+        irrigationNumber: (json['irrigation_number'] as num?)?.toInt() ?? 0,
+        dayOffset: (json['day_offset'] as num?)?.toInt() ?? 0,
+        volumeLiters: (json['volume_liters'] as num?)?.toDouble() ?? 0,
       );
 }
