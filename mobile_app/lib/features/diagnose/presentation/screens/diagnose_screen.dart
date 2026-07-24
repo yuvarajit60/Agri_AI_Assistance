@@ -134,39 +134,66 @@ class _DiagnoseScreenState extends ConsumerState<DiagnoseScreen> {
         children: [
           Text(s.diagnoseSubtitle, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 20),
-          GestureDetector(
-            onTap: _showPhotoSourceSheet,
-            child: Container(
-              height: 160,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceAlt,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-                image: _photo != null ? DecorationImage(image: FileImage(_photo!), fit: BoxFit.cover) : null,
+          Stack(
+            children: [
+              GestureDetector(
+                onTap: _showPhotoSourceSheet,
+                child: Container(
+                  height: 160,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                    image: _photo != null ? DecorationImage(image: FileImage(_photo!), fit: BoxFit.cover) : null,
+                  ),
+                  child: _photo == null
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.add_a_photo_outlined, size: 32, color: AppColors.textSecondary),
+                            const SizedBox(height: 8),
+                            Text(s.addPhoto, style: Theme.of(context).textTheme.bodyMedium),
+                          ],
+                        )
+                      : Align(
+                          alignment: Alignment.bottomRight,
+                          child: Container(
+                            margin: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(s.retakePhoto, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                          ),
+                        ),
+                ),
               ),
-              child: _photo == null
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.add_a_photo_outlined, size: 32, color: AppColors.textSecondary),
-                        const SizedBox(height: 8),
-                        Text(s.addPhoto, style: Theme.of(context).textTheme.bodyMedium),
-                      ],
-                    )
-                  : Align(
-                      alignment: Alignment.bottomRight,
+              if (_photo != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Tooltip(
+                    message: s.removePhoto,
+                    child: InkWell(
+                      onTap: () => setState(() {
+                        _photo = null;
+                        _result = null;
+                      }),
+                      borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        margin: const EdgeInsets.all(8),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(8),
+                          shape: BoxShape.circle,
                         ),
-                        child: Text(s.retakePhoto, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                        child: const Icon(Icons.close_rounded, size: 18, color: Colors.white),
                       ),
                     ),
-            ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 20),
           Text(s.cropLabel, style: Theme.of(context).textTheme.titleSmall),

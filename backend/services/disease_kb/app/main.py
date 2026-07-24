@@ -304,7 +304,7 @@ def _photo_match_reasoning(language: str, disease_name: str, confidence: float) 
 
 @app.post("/disease/diagnose-photo", response_model=RecommendationEnvelope[dict])
 async def diagnose_photo(
-    crop: str = Form(...),
+    crop: str = Form(""),
     notes: str = Form(""),
     photo: UploadFile = File(...),
     language: str = Form("en"),

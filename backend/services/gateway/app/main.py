@@ -382,7 +382,7 @@ async def proxy_chemical_guidance(payload: dict[str, Any]) -> Response:
 
 @app.post("/disease/diagnose-photo")
 async def proxy_diagnose_photo(
-    crop: str = Form(...),
+    crop: str = Form(""),
     notes: str = Form(""),
     photo: UploadFile = File(...),
     language: str = Form("en"),

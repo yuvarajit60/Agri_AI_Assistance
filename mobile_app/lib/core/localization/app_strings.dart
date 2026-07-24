@@ -250,6 +250,7 @@ abstract class AppStrings {
   String get diagnoseSubtitle;
   String get addPhoto;
   String get retakePhoto;
+  String get removePhoto;
   String get takePhoto;
   String get chooseFromGallery;
   String get cropLabel;
@@ -754,6 +755,8 @@ class _EnStrings implements AppStrings {
   String get addPhoto => 'Add photo';
   @override
   String get retakePhoto => 'Change photo';
+  @override
+  String get removePhoto => 'Remove photo';
   @override
   String get takePhoto => 'Take photo';
   @override
@@ -1364,6 +1367,8 @@ class _TaStrings implements AppStrings {
   String get addPhoto => 'புகைப்படம் சேர்';
   @override
   String get retakePhoto => 'புகைப்படத்தை மாற்று';
+  @override
+  String get removePhoto => 'புகைப்படத்தை அகற்று';
   @override
   String get takePhoto => 'புகைப்படம் எடு';
   @override
