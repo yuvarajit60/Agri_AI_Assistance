@@ -75,14 +75,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/water',
         builder: (context, state) => WaterResourceScreen(section: state.extra as WaterResourceSection),
       ),
-      GoRoute(
-        path: '/fertilizer',
-        builder: (context, state) => FertilizerScreen(section: state.extra as FertilizerRecommendationSection),
-      ),
-      GoRoute(
-        path: '/irrigation',
-        builder: (context, state) => IrrigationScreen(section: state.extra as IrrigationPlanSection),
-      ),
+      GoRoute(path: '/fertilizer', builder: (context, state) => const FertilizerScreen()),
+      GoRoute(path: '/irrigation', builder: (context, state) => const IrrigationScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
         branches: [

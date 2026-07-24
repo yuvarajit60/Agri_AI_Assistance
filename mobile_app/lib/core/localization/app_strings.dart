@@ -199,6 +199,8 @@ abstract class AppStrings {
   String get predictedPriceRange;
   String get nearbyMandis;
   String get marketForecastUnavailable;
+  String get irrigationPlanUnavailable;
+  String get fertilizerRecommendationUnavailable;
 
   // Chat
   String get aiAdvisor;
@@ -208,12 +210,6 @@ abstract class AppStrings {
   String get chatSuggestion2;
   String get chatSuggestion3;
   String get chatSuggestion4;
-  String get chatReplyRain;
-  String get chatReplyCoconut;
-  String get chatReplyProfit;
-  String get chatReplyDisease;
-  String get chatReplyIrrigation;
-  String get chatReplyFallback;
 
   // Profile
   String get profileTitle;
@@ -667,6 +663,12 @@ class _EnStrings implements AppStrings {
   @override
   String get marketForecastUnavailable =>
       "We couldn't get a market forecast yet — this needs a recommended crop from your dashboard first.";
+  @override
+  String get irrigationPlanUnavailable =>
+      "We couldn't get an irrigation plan yet — this needs a recommended crop from your dashboard first.";
+  @override
+  String get fertilizerRecommendationUnavailable =>
+      "We couldn't get a fertilizer recommendation yet — this needs a recommended crop from your dashboard first.";
 
   @override
   String get aiAdvisor => 'AI Advisor';
@@ -683,24 +685,6 @@ class _EnStrings implements AppStrings {
   String get chatSuggestion3 => 'Should I irrigate today?';
   @override
   String get chatSuggestion4 => 'Why are my leaves turning yellow?';
-  @override
-  String get chatReplyRain =>
-      "There's a 20% chance of rain today, rising to 65% by Thursday. I'd hold off on irrigation until we're past the wetter mid-week window.";
-  @override
-  String get chatReplyCoconut =>
-      "Coconut needs more consistent water availability and a warmer, humid climate than your farm currently shows — suitability is estimated at 38%, so I wouldn't recommend it here without added irrigation.";
-  @override
-  String get chatReplyProfit =>
-      "Based on your soil, water and this season's price outlook, Cotton currently ranks highest — 88% suitability and an estimated ₹42,000/acre profit, though medium risk from price volatility.";
-  @override
-  String get chatReplyDisease =>
-      "Yellowing leaves can mean nitrogen deficiency, overwatering, or early blight. Could you share the crop and how long you've noticed it? A photo would help narrow this down.";
-  @override
-  String get chatReplyIrrigation =>
-      "Soil moisture is currently adequate and rain is likely by Thursday — I'd skip irrigation today and re-check after the rain passes.";
-  @override
-  String get chatReplyFallback =>
-      "I don't have a confident, data-backed answer for that yet — this is a demo response. Once connected to the live services I'll ground this in your farm's real data.";
 
   @override
   String get profileTitle => 'Profile';
@@ -1289,6 +1273,12 @@ class _TaStrings implements AppStrings {
   @override
   String get marketForecastUnavailable =>
       'இன்னும் சந்தை முன்னறிவிப்பைப் பெற முடியவில்லை — இதற்கு முதலில் உங்கள் டாஷ்போர்டில் இருந்து பரிந்துரைக்கப்பட்ட பயிர் தேவை.';
+  @override
+  String get irrigationPlanUnavailable =>
+      'இன்னும் பாசன திட்டத்தைப் பெற முடியவில்லை — இதற்கு முதலில் உங்கள் டாஷ்போர்டில் இருந்து பரிந்துரைக்கப்பட்ட பயிர் தேவை.';
+  @override
+  String get fertilizerRecommendationUnavailable =>
+      'இன்னும் உர பரிந்துரையைப் பெற முடியவில்லை — இதற்கு முதலில் உங்கள் டாஷ்போர்டில் இருந்து பரிந்துரைக்கப்பட்ட பயிர் தேவை.';
 
   @override
   String get aiAdvisor => 'AI ஆலோசகர்';
@@ -1305,24 +1295,6 @@ class _TaStrings implements AppStrings {
   String get chatSuggestion3 => 'இன்று நீர்ப்பாசனம் செய்ய வேண்டுமா?';
   @override
   String get chatSuggestion4 => 'ஏன் என் இலைகள் மஞ்சளாக மாறுகின்றன?';
-  @override
-  String get chatReplyRain =>
-      'இன்று 20% மழை வாய்ப்பு உள்ளது, வியாழக்கிழமையளவில் 65% ஆக உயரும். வாரத்தின் நடுப்பகுதியில் மழை கடக்கும் வரை நீர்ப்பாசனத்தை தவிர்ப்பது நல்லது.';
-  @override
-  String get chatReplyCoconut =>
-      'தென்னைக்கு உங்கள் பண்ணையை விட அதிக நிலையான நீர் கிடைப்பும், வெப்பமான ஈரப்பதமான காலநிலையும் தேவை — பொருத்தம் 38% என மதிப்பிடப்படுகிறது, எனவே கூடுதல் நீர்ப்பாசனம் இல்லாமல் இங்கு பரிந்துரைக்க மாட்டேன்.';
-  @override
-  String get chatReplyProfit =>
-      'உங்கள் மண், நீர் மற்றும் இந்த பருவத்தின் விலை கணிப்பின் அடிப்படையில், பருத்தி தற்போது அதிக மதிப்பெண் பெறுகிறது — 88% பொருத்தம் மற்றும் ஏக்கருக்கு ₹42,000 மதிப்பிடப்பட்ட லாபம், எனினும் விலை ஏற்ற இறக்கத்தால் நடுத்தர இடர்.';
-  @override
-  String get chatReplyDisease =>
-      'மஞ்சள் இலைகள் நைட்ரஜன் குறைபாடு, அதிக நீர்ப்பாசனம் அல்லது ஆரம்பகட்ட நோயைக் குறிக்கலாம். பயிர் மற்றும் எவ்வளவு காலமாக இதைக் கவனித்தீர்கள் என்று பகிருங்கள்? ஒரு புகைப்படம் இதைச் சரியாகக் கண்டறிய உதவும்.';
-  @override
-  String get chatReplyIrrigation =>
-      'மண் ஈரப்பதம் தற்போது போதுமானதாக உள்ளது, வியாழக்கிழமையளவில் மழை வாய்ப்புள்ளது — இன்று நீர்ப்பாசனத்தைத் தவிர்த்து மழைக்குப் பிறகு மீண்டும் சரிபார்க்கவும்.';
-  @override
-  String get chatReplyFallback =>
-      'அதற்கு நம்பகமான, தரவு அடிப்படையிலான பதில் என்னிடம் இன்னும் இல்லை — இது ஒரு டெமோ பதில். நேரடி சேவைகளுடன் இணைந்தவுடன், இதை உங்கள் பண்ணையின் உண்மையான தரவின் அடிப்படையில் தருவேன்.';
 
   @override
   String get profileTitle => 'சுயவிவரம்';

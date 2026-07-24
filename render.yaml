@@ -94,6 +94,20 @@ services:
     dockerContext: ./backend
     healthCheckPath: /health
 
+  # Lightweight by design (no embedding model, unlike disease_kb) so it fits
+  # the free tier — see docs/architecture/ROADMAP.md.
+  - type: web
+    name: agri-ai-chat
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/services/ai_chat/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false # set manually in the Render dashboard — same key disease_kb uses
+
   - type: web
     name: agri-farm-registry
     runtime: docker
@@ -133,3 +147,5 @@ services:
         sync: false # set manually — agri-fertilizer's public https://....onrender.com URL
       - key: IRRIGATION_SERVICE_URL
         sync: false # set manually — agri-irrigation's public https://....onrender.com URL
+      - key: AI_CHAT_SERVICE_URL
+        sync: false # set manually — agri-ai-chat's public https://....onrender.com URL

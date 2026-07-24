@@ -55,10 +55,29 @@ class DashboardData {
 }
 
 class LandHealthSection {
-  const LandHealthSection({required this.score, required this.confidence, required this.subIndices});
+  const LandHealthSection({
+    required this.score,
+    required this.confidence,
+    required this.subIndices,
+    required this.nitrogenKgPerHa,
+    required this.phosphorusKgPerHa,
+    required this.potassiumKgPerHa,
+    required this.ph,
+    required this.organicCarbonPercent,
+    required this.moisturePercent,
+  });
   final double score;
   final double confidence;
   final Map<String, double> subIndices;
+  // Raw soil values — kept alongside the computed score/sub-indices so
+  // downstream on-demand calls (e.g. Fertilizer's crop selector) don't
+  // need a second round-trip to the Soil service just to re-read them.
+  final double nitrogenKgPerHa;
+  final double phosphorusKgPerHa;
+  final double potassiumKgPerHa;
+  final double ph;
+  final double organicCarbonPercent;
+  final double moisturePercent;
 
   factory LandHealthSection.fromJson(Map<String, dynamic> json) {
     final result = json['result'] as Map<String, dynamic>? ?? {};
@@ -67,6 +86,12 @@ class LandHealthSection {
       score: (result['land_health_score'] as num?)?.toDouble() ?? 0,
       confidence: (json['confidence_score'] as num?)?.toDouble() ?? 0,
       subIndices: subIndicesRaw.map((k, v) => MapEntry(k, (v as num).toDouble())),
+      nitrogenKgPerHa: (result['nitrogen_kg_per_ha'] as num?)?.toDouble() ?? 0,
+      phosphorusKgPerHa: (result['phosphorus_kg_per_ha'] as num?)?.toDouble() ?? 0,
+      potassiumKgPerHa: (result['potassium_kg_per_ha'] as num?)?.toDouble() ?? 0,
+      ph: (result['ph'] as num?)?.toDouble() ?? 0,
+      organicCarbonPercent: (result['organic_carbon_percent'] as num?)?.toDouble() ?? 0,
+      moisturePercent: (result['moisture_percent'] as num?)?.toDouble() ?? 0,
     );
   }
 }

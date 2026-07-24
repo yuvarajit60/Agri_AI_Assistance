@@ -16,6 +16,7 @@ from fastapi import FastAPI, File, Form, Query, Response, UploadFile
 from fastapi.responses import JSONResponse
 
 from .config import (
+    AI_CHAT_SERVICE_URL,
     CROP_SERVICE_URL,
     DISEASE_KB_SERVICE_URL,
     FARM_REGISTRY_URL,
@@ -334,6 +335,26 @@ async def proxy_fertilizer_recommend(payload: dict[str, Any]) -> Response:
 @app.post("/irrigation/plan")
 async def proxy_irrigation_plan(payload: dict[str, Any]) -> Response:
     return await _proxy("POST", "/irrigation/plan", json=payload, base_url=IRRIGATION_SERVICE_URL)
+
+
+# --- AI Chat (Farm Advisor) proxy -----------------------------------------
+
+
+@app.post("/chat/ask")
+async def proxy_chat_ask(payload: dict[str, Any]) -> Response:
+    # Adaptive thinking + effort can genuinely take longer than the other
+    # (non-LLM) proxied calls' shared timeout — same reasoning as the photo
+    # diagnosis proxy's own extended budget.
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{AI_CHAT_SERVICE_URL}/chat/ask",
+                json=payload,
+                timeout=max(REQUEST_TIMEOUT_SECONDS, 60.0),
+            )
+    except httpx.HTTPError as exc:
+        return JSONResponse(status_code=503, content={"detail": f"AI chat unavailable: {exc}"})
+    return JSONResponse(content=resp.json(), status_code=resp.status_code)
 
 
 # --- Disease Organic Knowledge Base (RAG) proxy -------------------------

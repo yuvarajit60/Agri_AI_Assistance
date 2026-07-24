@@ -88,6 +88,15 @@ services:
     ports:
       - "8010:8000"
 
+  ai_chat:
+    build:
+      context: .
+      dockerfile: services/ai_chat/Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "8011:8000"
+
   disease_kb:
     build:
       context: .
@@ -114,6 +123,7 @@ services:
       MARKET_SERVICE_URL: http://market_price:8000
       FERTILIZER_SERVICE_URL: http://fertilizer:8000
       IRRIGATION_SERVICE_URL: http://irrigation:8000
+      AI_CHAT_SERVICE_URL: http://ai_chat:8000
     depends_on:
       - soil
       - weather
@@ -125,6 +135,7 @@ services:
       - market_price
       - fertilizer
       - irrigation
+      - ai_chat
     ports:
       - "8000:8000"
 

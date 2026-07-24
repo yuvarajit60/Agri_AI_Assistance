@@ -514,7 +514,7 @@ class _FertilizerCard extends StatelessWidget {
       title: s.fertilizerRecommendationTitle,
       icon: Icons.grain_rounded,
       trailing: ConfidenceBadge(score: section.confidence, compact: true),
-      onTap: () => context.push('/fertilizer', extra: section),
+      onTap: () => context.push('/fertilizer'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -548,7 +548,7 @@ class _IrrigationCard extends StatelessWidget {
       title: s.irrigationPlanTitle,
       icon: Icons.water_drop_rounded,
       trailing: ConfidenceBadge(score: section.confidence, compact: true),
-      onTap: () => context.push('/irrigation', extra: section),
+      onTap: () => context.push('/irrigation'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
